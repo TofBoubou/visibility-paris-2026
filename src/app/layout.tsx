@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Baromètre de Visibilité Médiatique - Paris 2026",
   description: "Analyse de la visibilité médiatique des candidats aux élections municipales Paris 2026",
   icons: {
-    icon: "/logos/Logo SK (tout clair sans 3D sans slogan).svg",
+    icon: "/favicon.svg",
   },
 };
 
