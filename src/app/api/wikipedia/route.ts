@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
   const pageTitle = searchParams.get("page");
   const days = parseInt(searchParams.get("days") || "14", 10);
 
+  console.log(`[Wikipedia] Request: page="${pageTitle}", days=${days}`);
+
   if (!pageTitle) {
+    console.error("[Wikipedia] ERROR: Missing page parameter");
     return NextResponse.json({ error: "Missing page parameter" }, { status: 400 });
   }
 
@@ -94,6 +97,8 @@ export async function GET(request: NextRequest) {
       avgDaily: Math.round(avgDaily),
       daily,
     };
+
+    console.log(`[Wikipedia] Result for "${pageTitle}": ${currentViews} views, ${Math.round(variation)}% variation`);
 
     return NextResponse.json(result, {
       headers: {

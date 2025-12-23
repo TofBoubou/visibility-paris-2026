@@ -23,7 +23,10 @@ export async function GET(request: NextRequest) {
   const searchTerm = searchParams.get("q");
   const days = parseInt(searchParams.get("days") || "14", 10);
 
+  console.log(`[Press] Request: q="${searchTerm}", days=${days}`);
+
   if (!searchTerm) {
+    console.error("[Press] ERROR: Missing search term");
     return NextResponse.json({ error: "Missing search term" }, { status: 400 });
   }
 
@@ -80,6 +83,8 @@ export async function GET(request: NextRequest) {
       topMediaCount: sortedDomains[0]?.[1] || 0,
       mediaBreakdown,
     };
+
+    console.log(`[Press] Result for "${searchTerm}": ${uniqueArticles.length} articles from ${Object.keys(domainCounts).length} domains`);
 
     return NextResponse.json(result, {
       headers: {

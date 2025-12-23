@@ -62,16 +62,22 @@ export async function GET(request: NextRequest) {
   const requestedDays = parseInt(searchParams.get("days") || "7", 10);
   const channelHandle = searchParams.get("channel");
 
+  console.log(`[YouTube] Request: q="${searchTerm}", days=${requestedDays}, channel=${channelHandle}`);
+
   const apiKey = process.env.YOUTUBE_API_KEY;
 
   if (!apiKey) {
+    console.error("[YouTube] ERROR: YOUTUBE_API_KEY not configured");
     return NextResponse.json(
       { error: "YouTube API key not configured", videos: [], totalViews: 0, totalLikes: 0, totalComments: 0, shortsViews: 0, shortsLikes: 0, shortsComments: 0, longVideosViews: 0, longLikes: 0, longComments: 0, shortsCount: 0, longCount: 0, avgViewsPerVideo: 0, fromCache: false },
       { status: 500 }
     );
   }
 
+  console.log(`[YouTube] API key configured: ${apiKey.slice(0, 10)}...`);
+
   if (!searchTerm) {
+    console.error("[YouTube] ERROR: Missing search term");
     return NextResponse.json({ error: "Missing search term" }, { status: 400 });
   }
 
@@ -113,6 +119,7 @@ export async function GET(request: NextRequest) {
       key: apiKey,
     });
 
+    console.log(`[YouTube] Calling search API for "${searchTerm}"...`);
     const searchResponse = await fetch(
       `${YOUTUBE_API_BASE}/search?${searchParams}`,
       { signal: AbortSignal.timeout(15000) }
@@ -120,13 +127,17 @@ export async function GET(request: NextRequest) {
 
     if (!searchResponse.ok) {
       const error = await searchResponse.json();
+      console.error(`[YouTube] Search API error:`, error);
       throw new Error(error.error?.message || `YouTube API error: ${searchResponse.status}`);
     }
 
     const searchData = await searchResponse.json();
     const videoIds = searchData.items?.map((item: { id: { videoId: string } }) => item.id.videoId) || [];
 
+    console.log(`[YouTube] Search returned ${videoIds.length} videos for "${searchTerm}"`);
+
     if (videoIds.length === 0) {
+      console.log(`[YouTube] No videos found for "${searchTerm}"`);
       return NextResponse.json({
         videos: [],
         totalViews: 0,
