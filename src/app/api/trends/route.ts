@@ -28,7 +28,7 @@ async function fetchFromPython(keyword: string, days: number): Promise<TrendData
       ? `https://${process.env.VERCEL_URL}`
       : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-    const url = `${baseUrl}/api/trends?q=${encodeURIComponent(keyword)}&days=${days}`;
+    const url = `${baseUrl}/py-api/trends?q=${encodeURIComponent(keyword)}&days=${days}`;
 
     const response = await fetch(url, {
       method: "GET",
