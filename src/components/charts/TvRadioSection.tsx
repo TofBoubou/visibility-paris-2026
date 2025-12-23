@@ -32,11 +32,11 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-brand-blue/50 italic">
+          <p className="text-gray-500 italic">
             Aucune mention TV/Radio détectée dans les articles récents.
           </p>
           <div className="mt-4">
-            <p className="text-sm text-brand-blue/70 mb-2">
+            <p className="text-sm text-gray-600 mb-2">
               Médias surveillés :
             </p>
             <div className="flex flex-wrap gap-2">
@@ -44,7 +44,7 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
                 <Badge
                   key={media}
                   variant="outline"
-                  className="text-xs text-brand-blue/50"
+                  className="text-xs text-gray-500"
                 >
                   {media}
                 </Badge>
@@ -70,7 +70,7 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-brand-blue/70 mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             Détection automatique des passages TV et Radio dans les articles de presse.
           </p>
 
@@ -79,22 +79,22 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
             {topMedias.slice(0, 8).map(({ media, count }) => (
               <div
                 key={media}
-                className="bg-brand-blue/5 rounded-lg p-3 text-center"
+                className="bg-gray-100 rounded-lg p-3 text-center"
               >
                 <div className="flex items-center justify-center gap-2 mb-1">
                   {media.includes("Radio") || media.includes("RTL") || media.includes("Europe") || media.includes("RMC") || media.includes("Inter") ? (
-                    <Radio className="w-4 h-4 text-brand-pink" />
+                    <Radio className="w-4 h-4 text-blue-600" />
                   ) : (
-                    <Tv className="w-4 h-4 text-brand-pink" />
+                    <Tv className="w-4 h-4 text-blue-600" />
                   )}
-                  <span className="font-medium text-brand-blue text-sm">
+                  <span className="font-medium text-gray-900 text-sm">
                     {media}
                   </span>
                 </div>
-                <span className="text-2xl font-bold text-brand-pink">
+                <span className="text-2xl font-bold text-blue-600">
                   {count}
                 </span>
-                <span className="text-xs text-brand-blue/50 block">
+                <span className="text-xs text-gray-500 block">
                   mention{count > 1 ? "s" : ""}
                 </span>
               </div>
@@ -113,18 +113,18 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
             {mentions.map((mention, index) => (
               <div
                 key={index}
-                className="border border-brand-blue/10 rounded-lg p-3 hover:bg-brand-blue/5 transition-colors"
+                className="border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge
                         variant="secondary"
-                        className="text-xs bg-brand-yellow/20 text-brand-blue"
+                        className="text-xs bg-brand-yellow/20 text-gray-900"
                       >
                         {mention.media}
                       </Badge>
-                      <span className="text-xs text-brand-blue/50">
+                      <span className="text-xs text-gray-500">
                         {new Date(mention.date).toLocaleDateString("fr-FR", {
                           day: "numeric",
                           month: "short",
@@ -136,7 +136,7 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
                       href={mention.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-brand-blue hover:text-brand-pink transition-colors line-clamp-2"
+                      className="text-sm text-gray-900 hover:text-blue-600 transition-colors line-clamp-2"
                     >
                       {mention.title}
                     </a>
@@ -145,7 +145,7 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
                     href={mention.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-brand-pink hover:text-brand-pink/80"
+                    className="text-blue-600 hover:text-blue-600/80"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
@@ -172,7 +172,7 @@ export function TvRadioSection({ articles }: TvRadioSectionProps) {
                   className={
                     mediaCount > 0
                       ? "bg-brand-pink text-white"
-                      : "text-brand-blue/50"
+                      : "text-gray-500"
                   }
                 >
                   {media}

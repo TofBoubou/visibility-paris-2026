@@ -68,7 +68,7 @@ export function SentimentChart({ data, height = 300 }: SentimentChartProps) {
                   : "Neutre";
               return (
                 <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                  <p className="font-bold text-brand-blue">{item.name}</p>
+                  <p className="font-bold text-gray-900">{item.name}</p>
                   <p style={{ color: getSentimentColor(item.sentiment) }}>
                     {item.sentiment > 0 ? "+" : ""}
                     {item.sentiment.toFixed(2)} ({label})

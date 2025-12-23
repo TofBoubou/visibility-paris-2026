@@ -68,13 +68,13 @@ export function YouTubeChart({
               if (active && payload && payload.length) {
                 return (
                   <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                    <p className="font-bold text-brand-blue mb-2">{label}</p>
+                    <p className="font-bold text-gray-900 mb-2">{label}</p>
                     <div className="flex justify-between gap-4 text-sm">
-                      <span className="text-brand-pink">Shorts</span>
+                      <span className="text-blue-600">Shorts</span>
                       <span>{formatViews(Number(payload[0]?.value) || 0)}</span>
                     </div>
                     <div className="flex justify-between gap-4 text-sm">
-                      <span className="text-brand-blue">Vidéos longues</span>
+                      <span className="text-gray-900">Vidéos longues</span>
                       <span>{formatViews(Number(payload[1]?.value) || 0)}</span>
                     </div>
                   </div>
@@ -130,8 +130,8 @@ export function YouTubeChart({
               const item = payload[0].payload as YouTubeData;
               return (
                 <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                  <p className="font-bold text-brand-blue">{item.name}</p>
-                  <p className="text-brand-pink text-lg">
+                  <p className="font-bold text-gray-900">{item.name}</p>
+                  <p className="text-blue-600 text-lg">
                     {formatViews(item.totalViews)} vues
                   </p>
                 </div>

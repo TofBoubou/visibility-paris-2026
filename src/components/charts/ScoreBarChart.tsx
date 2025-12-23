@@ -54,8 +54,8 @@ export function ScoreBarChart({ data, height = 300 }: ScoreBarChartProps) {
               const item = payload[0].payload as ScoreData;
               return (
                 <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                  <p className="font-bold text-brand-blue">{item.name}</p>
-                  <p className="text-brand-pink text-lg">
+                  <p className="font-bold text-gray-900">{item.name}</p>
+                  <p className="text-blue-600 text-lg">
                     {item.score.toFixed(1)} / 100
                   </p>
                 </div>

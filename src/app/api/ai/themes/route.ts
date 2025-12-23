@@ -119,8 +119,19 @@ export async function POST(request: NextRequest) {
 
     // Parse JSON response
     try {
-      // Remove potential markdown code blocks
-      const cleanJson = responseText.replace(/```json\n?|\n?```/g, "").trim();
+      // Remove potential markdown code blocks and clean up
+      let cleanJson = responseText
+        .replace(/```json\n?|\n?```/g, "")
+        .replace(/^\s+|\s+$/g, "")  // Trim whitespace
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, "");  // Remove control characters
+
+      // Try to find JSON object if there's extra text
+      const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanJson = jsonMatch[0];
+      }
+
+      console.log(`[Themes] Parsing JSON for ${candidateName}, length: ${cleanJson.length}`);
       const parsed = JSON.parse(cleanJson) as ThemesResponse;
 
       // Validate and sanitize

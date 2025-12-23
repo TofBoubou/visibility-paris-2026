@@ -138,8 +138,8 @@ export function YouTubeScatterChart({
                 const typeLabel = item.type === "long" ? "Vidéos longues" : "Shorts";
                 return (
                   <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                    <p className="font-bold text-brand-blue">{item.name}</p>
-                    <p className="text-xs text-brand-blue/60 mb-2">{typeLabel}</p>
+                    <p className="font-bold text-gray-900">{item.name}</p>
+                    <p className="text-xs text-gray-900/60 mb-2">{typeLabel}</p>
                     <div className="text-sm space-y-1">
                       <div className="flex justify-between gap-4">
                         <span>Vues:</span>
@@ -147,7 +147,7 @@ export function YouTubeScatterChart({
                       </div>
                       <div className="flex justify-between gap-4">
                         <span>{variant === "likes" ? "Taux likes:" : "Taux commentaires:"}</span>
-                        <span className="font-medium text-brand-pink">{item.ratio.toFixed(2)}%</span>
+                        <span className="font-medium text-blue-600">{item.ratio.toFixed(2)}%</span>
                       </div>
                       <div className="flex justify-between gap-4">
                         <span>Vidéos:</span>
@@ -188,7 +188,7 @@ export function YouTubeScatterChart({
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
-      <p className="text-xs text-brand-blue/50 text-center mt-2">
+      <p className="text-xs text-gray-500 text-center mt-2">
         Rond = Vidéos longues, Carré = Shorts · Échelle logarithmique
       </p>
     </div>

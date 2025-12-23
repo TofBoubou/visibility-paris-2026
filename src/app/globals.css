@@ -29,148 +29,148 @@
 }
 
 :root {
-  /* Charte graphique Sarah Knafo Paris */
-  --brand-cream: #FCEFD0;
-  --brand-yellow: #FBCD41;
-  --brand-blue: #22496A;
-  --brand-pink: #E1386E;
+  /* Palette sobre et professionnelle */
+  --brand-cream: #F9FAFB;
+  --brand-yellow: #6B7280;
+  --brand-blue: #1F2937;
+  --brand-pink: #2563EB;
 
   /* Fonts */
-  --font-puffin: "Puffin Display", sans-serif;
-  --font-myriad: "Myriad Variable Concept", sans-serif;
+  --font-puffin: "Puffin Display", system-ui, sans-serif;
+  --font-myriad: "Myriad Variable Concept", system-ui, sans-serif;
 
-  /* shadcn/ui variables - Light theme avec charte */
-  --background: 45 58% 91%; /* cream */
-  --foreground: 209 52% 27%; /* blue */
+  /* shadcn/ui variables - Light theme sobre */
+  --background: 0 0% 98%;
+  --foreground: 220 13% 18%;
 
   --card: 0 0% 100%;
-  --card-foreground: 209 52% 27%;
+  --card-foreground: 220 13% 18%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 209 52% 27%;
+  --popover-foreground: 220 13% 18%;
 
-  --primary: 340 75% 55%; /* pink */
-  --primary-foreground: 45 58% 91%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 43 96% 62%; /* yellow */
-  --secondary-foreground: 209 52% 27%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 220 13% 18%;
 
-  --muted: 45 30% 85%;
-  --muted-foreground: 209 30% 45%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
 
-  --accent: 43 96% 62%;
-  --accent-foreground: 209 52% 27%;
+  --accent: 220 14% 96%;
+  --accent-foreground: 220 13% 18%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 209 30% 80%;
-  --input: 209 30% 80%;
-  --ring: 340 75% 55%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 221 83% 53%;
 
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 }
 
 /* Base styles */
 body {
-  font-family: var(--font-puffin);
-  background-color: var(--brand-cream);
-  color: var(--brand-blue);
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #F9FAFB;
+  color: #1F2937;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-puffin);
-  font-weight: 900;
-  font-style: italic;
-  color: var(--brand-pink);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 600;
+  color: #111827;
 }
 
 h1 {
-  font-size: 1.75rem;
-  line-height: 1.1;
-}
-
-h2 {
   font-size: 1.5rem;
   line-height: 1.2;
 }
 
-h3 {
-  font-size: 1.125rem;
+h2 {
+  font-size: 1.25rem;
   line-height: 1.3;
+}
+
+h3 {
+  font-size: 1rem;
+  line-height: 1.4;
 }
 
 @media (min-width: 768px) {
   h1 {
-    font-size: 2.5rem;
+    font-size: 1.875rem;
   }
   h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
   h3 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
   }
 }
 
 /* Labels and subtitles */
 .subtitle, .label {
-  font-family: var(--font-myriad);
+  font-family: system-ui, -apple-system, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  color: #6B7280;
 }
 
 /* Utility classes */
 .text-shadow-3d {
-  text-shadow: 3px 3px 0 var(--brand-yellow);
+  /* Removed for sober design */
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--brand-cream);
+  background: #F3F4F6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--brand-blue);
-  border-radius: 4px;
+  background: #D1D5DB;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--brand-pink);
+  background: #9CA3AF;
 }
 
 /* Selection */
 ::selection {
-  background-color: var(--brand-pink);
-  color: var(--brand-cream);
+  background-color: #DBEAFE;
+  color: #1F2937;
 }
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid var(--brand-pink);
+  outline: 2px solid #2563EB;
   outline-offset: 2px;
 }
 
 /* Animations */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+  animation: fade-in 0.2s ease-out forwards;
 }
 
 /* Card hover effect */
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(34, 73, 106, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }

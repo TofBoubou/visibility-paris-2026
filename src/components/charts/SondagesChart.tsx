@@ -135,7 +135,7 @@ export function SondagesSection() {
                 href={latestSondage.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-normal text-brand-pink hover:underline flex items-center gap-1"
+                className="text-sm font-normal text-blue-600 hover:underline flex items-center gap-1"
               >
                 Source <ExternalLink className="w-3 h-3" />
               </a>
@@ -143,11 +143,11 @@ export function SondagesSection() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-brand-blue/70 mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             Commanditaire: {latestSondage.commanditaire} · Échantillon:{" "}
             {latestSondage.echantillon} personnes · {latestSondage.methode}
           </p>
-          <p className="text-xs text-brand-blue/50 mb-4 italic">
+          <p className="text-xs text-gray-500 mb-4 italic">
             Hypothèse: {latestSondage.hypothese}
           </p>
           <SondageBarChart sondage={latestSondage} />
@@ -176,34 +176,34 @@ export function SondagesSection() {
             ).map((sondage, index) => (
               <details
                 key={index}
-                className="border border-brand-blue/10 rounded-lg"
+                className="border border-gray-200 rounded-lg"
                 open={index === 0}
               >
-                <summary className="p-4 cursor-pointer hover:bg-brand-blue/5 transition-colors">
-                  <span className="font-medium text-brand-blue">
+                <summary className="p-4 cursor-pointer hover:bg-gray-100 transition-colors">
+                  <span className="font-medium text-gray-900">
                     {sondage.institut} - {sondage.date}
                   </span>
-                  <span className="text-sm text-brand-blue/50 ml-2">
+                  <span className="text-sm text-gray-500 ml-2">
                     ({sondage.hypothese.slice(0, 40)}...)
                   </span>
                 </summary>
-                <div className="p-4 pt-0 border-t border-brand-blue/10">
+                <div className="p-4 pt-0 border-t border-gray-200">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="text-sm space-y-1">
                       <p>
-                        <span className="text-brand-blue/50">Commanditaire:</span>{" "}
+                        <span className="text-gray-500">Commanditaire:</span>{" "}
                         {sondage.commanditaire}
                       </p>
                       <p>
-                        <span className="text-brand-blue/50">Échantillon:</span>{" "}
+                        <span className="text-gray-500">Échantillon:</span>{" "}
                         {sondage.echantillon} personnes
                       </p>
                       <p>
-                        <span className="text-brand-blue/50">Méthode:</span>{" "}
+                        <span className="text-gray-500">Méthode:</span>{" "}
                         {sondage.methode}
                       </p>
                       <p>
-                        <span className="text-brand-blue/50">Hypothèse:</span>{" "}
+                        <span className="text-gray-500">Hypothèse:</span>{" "}
                         {sondage.hypothese}
                       </p>
                       {sondage.sourceUrl && (
@@ -211,7 +211,7 @@ export function SondagesSection() {
                           href={sondage.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-brand-pink hover:underline flex items-center gap-1 mt-2"
+                          className="text-blue-600 hover:underline flex items-center gap-1 mt-2"
                         >
                           Voir le sondage <ExternalLink className="w-3 h-3" />
                         </a>
@@ -220,7 +220,7 @@ export function SondagesSection() {
                     <div>
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-brand-blue/10">
+                          <tr className="border-b border-gray-200">
                             <th className="text-left py-2">Candidat</th>
                             <th className="text-right py-2">Intentions</th>
                           </tr>
@@ -231,9 +231,9 @@ export function SondagesSection() {
                             .map(([name, score]) => (
                               <tr
                                 key={name}
-                                className={`border-b border-brand-blue/5 ${
+                                className={`border-b border-gray-100 ${
                                   name === "Sarah Knafo"
-                                    ? "bg-brand-pink/5 font-bold"
+                                    ? "bg-blue-50 font-bold"
                                     : ""
                                 }`}
                               >

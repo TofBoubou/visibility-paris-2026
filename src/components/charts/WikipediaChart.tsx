@@ -78,7 +78,7 @@ export function WikipediaChart({
                 const sign = item.variation > 0 ? "+" : "";
                 return (
                   <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                    <p className="font-bold text-brand-blue">{item.name}</p>
+                    <p className="font-bold text-gray-900">{item.name}</p>
                     <p style={{ color: getVariationColor(item.variation) }}>
                       {sign}
                       {item.variation.toFixed(1)}% vs période précédente
@@ -129,8 +129,8 @@ export function WikipediaChart({
               const item = payload[0].payload as WikipediaData;
               return (
                 <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                  <p className="font-bold text-brand-blue">{item.name}</p>
-                  <p className="text-brand-pink text-lg">
+                  <p className="font-bold text-gray-900">{item.name}</p>
+                  <p className="text-blue-600 text-lg">
                     {formatViews(item.views)} vues
                   </p>
                 </div>

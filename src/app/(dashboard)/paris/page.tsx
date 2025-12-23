@@ -243,7 +243,7 @@ export default function ParisPage() {
   if (selectedCandidates.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-brand-blue/50">
+        <p className="text-gray-500">
           Sélectionnez au moins un candidat dans la barre latérale.
         </p>
       </div>
@@ -282,18 +282,17 @@ export default function ParisPage() {
 
       {/* Title */}
       <div>
-        <h1 className="text-shadow-3d">Municipales Paris 2026</h1>
-        <p className="text-brand-blue/70 mt-1">
-          Analyse de la visibilité médiatique des {selectedCandidates.length} candidats
-          sélectionnés
+        <h1>Municipales Paris 2026</h1>
+        <p className="text-gray-500 mt-1 text-sm">
+          Visibilité médiatique - {selectedCandidates.length} candidats
         </p>
       </div>
 
       {/* Loading state */}
       {isLoading && (
         <div className="flex items-center justify-center h-32">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-pink" />
-          <span className="ml-3 text-brand-blue/70">Chargement des données...</span>
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          <span className="ml-2 text-gray-500 text-sm">Chargement...</span>
         </div>
       )}
 
@@ -328,36 +327,36 @@ export default function ParisPage() {
         <Tabs defaultValue="scores" className="w-full">
           <TabsList className="flex-wrap">
             <TabsTrigger value="scores">
-              <TrendingUp className="w-4 h-4 mr-2" />
+              <TrendingUp className="w-4 h-4 mr-1.5" />
               Scores
             </TabsTrigger>
-            <TabsTrigger value="youtube">
-              <Youtube className="w-4 h-4 mr-2" />
-              YouTube
-            </TabsTrigger>
             <TabsTrigger value="themes">
-              <MessageSquare className="w-4 h-4 mr-2" />
+              <MessageSquare className="w-4 h-4 mr-1.5" />
               Thèmes
             </TabsTrigger>
-            <TabsTrigger value="sentiment">
-              <Heart className="w-4 h-4 mr-2" />
-              Sentiment
-            </TabsTrigger>
-            <TabsTrigger value="wikipedia">
-              <BookOpen className="w-4 h-4 mr-2" />
-              Wikipedia
-            </TabsTrigger>
             <TabsTrigger value="presse">
-              <Newspaper className="w-4 h-4 mr-2" />
+              <Newspaper className="w-4 h-4 mr-1.5" />
               Presse
             </TabsTrigger>
+            <TabsTrigger value="sentiment">
+              <Heart className="w-4 h-4 mr-1.5" />
+              Sentiment
+            </TabsTrigger>
             <TabsTrigger value="sondages">
-              <Vote className="w-4 h-4 mr-2" />
+              <Vote className="w-4 h-4 mr-1.5" />
               Sondages
             </TabsTrigger>
             <TabsTrigger value="tv-radio">
-              <Tv className="w-4 h-4 mr-2" />
+              <Tv className="w-4 h-4 mr-1.5" />
               TV/Radio
+            </TabsTrigger>
+            <TabsTrigger value="wikipedia">
+              <BookOpen className="w-4 h-4 mr-1.5" />
+              Wikipedia
+            </TabsTrigger>
+            <TabsTrigger value="youtube">
+              <Youtube className="w-4 h-4 mr-1.5" />
+              YouTube
             </TabsTrigger>
           </TabsList>
 
@@ -500,8 +499,8 @@ export default function ParisPage() {
           <TabsContent value="themes">
             {themesLoading ? (
               <div className="flex items-center justify-center h-32">
-                <Loader2 className="w-6 h-6 animate-spin text-brand-pink" />
-                <span className="ml-2 text-brand-blue/70">Analyse des thèmes en cours...</span>
+                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                <span className="ml-2 text-gray-500 text-sm">Analyse des thèmes...</span>
               </div>
             ) : themesData ? (
               <div className="space-y-6">
@@ -532,7 +531,7 @@ export default function ParisPage() {
               </div>
             ) : (
               <Card>
-                <CardContent className="p-8 text-center text-brand-blue/50">
+                <CardContent className="p-8 text-center text-gray-500">
                   Pas assez d&apos;articles pour analyser les thèmes.
                 </CardContent>
               </Card>
@@ -542,8 +541,8 @@ export default function ParisPage() {
           <TabsContent value="sentiment">
             {sentimentLoading ? (
               <div className="flex items-center justify-center h-32">
-                <Loader2 className="w-6 h-6 animate-spin text-brand-pink" />
-                <span className="ml-2 text-brand-blue/70">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                <span className="ml-2 text-gray-600">
                   Analyse du sentiment en cours...
                 </span>
               </div>
@@ -564,7 +563,7 @@ export default function ParisPage() {
                       }))}
                       height={Math.max(250, sentimentData.length * 40)}
                     />
-                    <p className="text-xs text-brand-blue/50 mt-4 text-center">
+                    <p className="text-xs text-gray-500 mt-4 text-center">
                       Score de -1 (très négatif) à +1 (très positif), basé sur l&apos;analyse IA
                       des titres d&apos;articles
                     </p>
@@ -589,7 +588,7 @@ export default function ParisPage() {
               </div>
             ) : (
               <Card>
-                <CardContent className="p-8 text-center text-brand-blue/50">
+                <CardContent className="p-8 text-center text-gray-500">
                   Pas assez d&apos;articles pour analyser le sentiment.
                 </CardContent>
               </Card>
@@ -649,8 +648,8 @@ export default function ParisPage() {
                       key={c.id}
                       className={`p-4 rounded-lg border ${
                         c.highlighted
-                          ? "border-brand-pink bg-brand-pink/5"
-                          : "border-brand-blue/10"
+                          ? "border-blue-200 bg-blue-50"
+                          : "border-gray-200"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -661,18 +660,18 @@ export default function ParisPage() {
                           />
                           <span
                             className={
-                              c.highlighted ? "font-bold text-brand-pink" : "font-medium"
+                              c.highlighted ? "font-bold text-blue-600" : "font-medium"
                             }
                           >
                             {c.name}
                           </span>
                         </div>
-                        <span className="text-sm text-brand-blue/70">
+                        <span className="text-sm text-gray-600">
                           {c.press.count} articles • {c.press.domains} sources
                         </span>
                       </div>
                       {c.press.topMedia && (
-                        <p className="text-xs text-brand-blue/50">
+                        <p className="text-xs text-gray-500">
                           Top média: {c.press.topMedia}
                         </p>
                       )}
@@ -682,7 +681,7 @@ export default function ParisPage() {
                           href={article.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block text-sm text-brand-blue hover:text-brand-pink mt-1 truncate"
+                          className="block text-sm text-gray-900 hover:text-blue-600 mt-1 truncate"
                         >
                           → {article.title}
                         </a>
@@ -721,26 +720,26 @@ export default function ParisPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-brand-blue/10">
-                    <th className="text-left py-3 px-2 font-myriad uppercase text-xs text-brand-blue/50">
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                       Rang
                     </th>
-                    <th className="text-left py-3 px-2 font-myriad uppercase text-xs text-brand-blue/50">
+                    <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                       Candidat
                     </th>
-                    <th className="text-left py-3 px-2 font-myriad uppercase text-xs text-brand-blue/50">
+                    <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                       Parti
                     </th>
-                    <th className="text-right py-3 px-2 font-myriad uppercase text-xs text-brand-blue/50">
+                    <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                       Score
                     </th>
-                    <th className="text-right py-3 px-2 font-myriad uppercase text-xs text-brand-blue/50">
+                    <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                       Presse
                     </th>
-                    <th className="text-right py-3 px-2 font-myriad uppercase text-xs text-brand-blue/50">
+                    <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                       Wikipedia
                     </th>
-                    <th className="text-right py-3 px-2 font-myriad uppercase text-xs text-brand-blue/50">
+                    <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                       YouTube
                     </th>
                   </tr>
@@ -749,11 +748,11 @@ export default function ParisPage() {
                   {sortedData.map((candidate, index) => (
                     <tr
                       key={candidate.id}
-                      className={`border-b border-brand-blue/5 hover:bg-brand-blue/5 transition-colors ${
-                        candidate.highlighted ? "bg-brand-pink/5" : ""
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                        candidate.highlighted ? "bg-blue-50" : ""
                       }`}
                     >
-                      <td className="py-3 px-2 font-bold text-brand-blue">{index + 1}</td>
+                      <td className="py-3 px-2 font-bold text-gray-900">{index + 1}</td>
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
                           <div
@@ -761,23 +760,23 @@ export default function ParisPage() {
                             style={{ backgroundColor: candidate.color }}
                           />
                           <span
-                            className={candidate.highlighted ? "font-bold text-brand-pink" : ""}
+                            className={candidate.highlighted ? "font-bold text-blue-600" : ""}
                           >
                             {candidate.name}
                           </span>
                         </div>
                       </td>
-                      <td className="py-3 px-2 text-brand-blue/70">{candidate.party}</td>
+                      <td className="py-3 px-2 text-gray-600">{candidate.party}</td>
                       <td className="py-3 px-2 text-right font-bold">
                         {candidate.score.total.toFixed(1)}
                       </td>
-                      <td className="py-3 px-2 text-right text-brand-blue/70">
+                      <td className="py-3 px-2 text-right text-gray-600">
                         {candidate.press.count}
                       </td>
-                      <td className="py-3 px-2 text-right text-brand-blue/70">
+                      <td className="py-3 px-2 text-right text-gray-600">
                         {formatNumber(candidate.wikipedia.views)}
                       </td>
-                      <td className="py-3 px-2 text-right text-brand-blue/70">
+                      <td className="py-3 px-2 text-right text-gray-600">
                         {formatNumber(candidate.youtube.totalViews)}
                       </td>
                     </tr>
@@ -801,12 +800,12 @@ interface MetricCardProps {
 function MetricCard({ label, value, icon }: MetricCardProps) {
   return (
     <Card className="card-hover">
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-brand-yellow/20 text-brand-pink">{icon}</div>
+          <div className="p-2 rounded-lg bg-gray-100 text-gray-600">{icon}</div>
           <div>
-            <p className="text-xs font-myriad uppercase text-brand-blue/50">{label}</p>
-            <p className="text-lg font-bold text-brand-blue">{value}</p>
+            <p className="text-xs uppercase text-gray-500">{label}</p>
+            <p className="text-base font-semibold text-gray-900">{value}</p>
           </div>
         </div>
       </CardContent>

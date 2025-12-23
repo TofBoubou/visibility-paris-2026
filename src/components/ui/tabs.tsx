@@ -48,7 +48,7 @@ const TabsList = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "inline-flex h-12 items-center justify-start gap-1 rounded-xl bg-brand-blue/5 p-1 overflow-x-auto",
+      "inline-flex h-10 items-center justify-start gap-0.5 rounded-lg bg-gray-100 p-1 overflow-x-auto",
       className
     )}
     {...props}
@@ -73,11 +73,11 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         aria-selected={isSelected}
         onClick={() => onValueChange(value)}
         className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-pink",
+          "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
           isSelected
-            ? "bg-white text-brand-pink shadow-md"
-            : "text-brand-blue/70 hover:text-brand-blue hover:bg-white/50",
+            ? "bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
           className
         )}
         {...props}

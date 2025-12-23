@@ -2,65 +2,69 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useContextStore } from "@/stores/context";
-import { usePeriodStore, PERIOD_LABELS } from "@/stores/period";
+import { useRouter } from "next/navigation";
+import { useContextStore, Context } from "@/stores/context";
+import { usePeriodStore, PERIOD_LABELS, Period } from "@/stores/period";
 import { cn } from "@/lib/utils/cn";
-import { Calendar } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 export function Header() {
+  const router = useRouter();
   const { context, setContext } = useContextStore();
-  const { period } = usePeriodStore();
+  const { period, setPeriod } = usePeriodStore();
+
+  const handleContextChange = (newContext: Context) => {
+    setContext(newContext);
+    router.push(`/${newContext}`);
+  };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-brand-blue/10 bg-brand-cream/95 backdrop-blur supports-[backdrop-filter]:bg-brand-cream/80">
-      <div className="flex h-14 md:h-16 items-center justify-between px-3 md:px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 md:gap-3">
+    <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
+      <div className="flex h-14 items-center justify-between px-3 md:px-4">
+        {/* Logo - simplified */}
+        <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logos/Logo SK (tout clair sans 3D sans slogan).svg"
-            alt="Sarah Knafo Paris"
-            width={40}
-            height={40}
-            className="h-8 w-8 md:h-10 md:w-10"
+            alt="Baromètre"
+            width={32}
+            height={32}
+            className="h-8 w-8"
           />
-          <div className="hidden sm:block">
-            <h1 className="text-base md:text-lg font-bold italic text-brand-pink leading-tight">
-              Baromètre de Visibilité
-            </h1>
-            <p className="text-xs text-brand-blue/70 font-myriad uppercase tracking-wider">
-              Municipales Paris 2026
-            </p>
-          </div>
+          <span className="hidden sm:inline text-sm font-semibold text-gray-900">
+            Baromètre Visibilité
+          </span>
         </Link>
 
-        {/* Right side: Period badge (mobile) + Context Switcher */}
-        <div className="flex items-center gap-2 md:gap-3">
-          {/* Period badge - visible on mobile only */}
-          <div className="flex lg:hidden items-center gap-1.5 px-2 py-1 bg-brand-yellow/20 rounded-md">
-            <Calendar className="w-3 h-3 text-brand-pink" />
-            <span className="text-xs font-medium text-brand-blue">
-              {PERIOD_LABELS[period]}
-            </span>
-          </div>
+        {/* Center: Context Switcher - prominent */}
+        <div className="flex items-center bg-gray-100 rounded-lg p-1">
+          <ContextButton
+            active={context === "paris"}
+            onClick={() => handleContextChange("paris")}
+          >
+            Paris 2026
+          </ContextButton>
+          <ContextButton
+            active={context === "national"}
+            onClick={() => handleContextChange("national")}
+          >
+            National
+          </ContextButton>
+        </div>
 
-          {/* Context Switcher */}
-          <div className="flex items-center gap-1 md:gap-2">
-            <ContextButton
-              active={context === "paris"}
-              onClick={() => setContext("paris")}
-            >
-              <span className="hidden xs:inline">Paris</span>
-              <span className="xs:hidden">P</span>
-              <span className="hidden sm:inline"> 2026</span>
-            </ContextButton>
-            <ContextButton
-              active={context === "national"}
-              onClick={() => setContext("national")}
-            >
-              <span className="hidden xs:inline">National</span>
-              <span className="xs:hidden">N</span>
-            </ContextButton>
-          </div>
+        {/* Right: Period dropdown */}
+        <div className="relative">
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as Period)}
+            className="appearance-none bg-gray-100 text-gray-700 text-sm font-medium pl-3 pr-8 py-2 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+              <option key={p} value={p}>
+                {PERIOD_LABELS[p]}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
         </div>
       </div>
     </header>
@@ -78,10 +82,10 @@ function ContextButton({ active, onClick, children }: ContextButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        "px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all",
+        "px-4 py-2 rounded-md text-sm font-medium transition-all",
         active
-          ? "bg-brand-pink text-brand-cream shadow-md"
-          : "bg-brand-blue/5 text-brand-blue hover:bg-brand-blue/10"
+          ? "bg-blue-600 text-white shadow-sm"
+          : "text-gray-600 hover:bg-gray-200"
       )}
     >
       {children}

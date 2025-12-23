@@ -31,7 +31,7 @@ interface HistoryChartProps {
 export function HistoryChart({ data, candidates, height = 350 }: HistoryChartProps) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-brand-blue/50">
+      <div className="flex items-center justify-center h-64 text-gray-500">
         Pas assez de données historiques pour afficher l&apos;évolution.
       </div>
     );
@@ -59,7 +59,7 @@ export function HistoryChart({ data, candidates, height = 350 }: HistoryChartPro
             if (active && payload && payload.length) {
               return (
                 <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg max-w-xs">
-                  <p className="font-bold text-brand-blue mb-2">{label}</p>
+                  <p className="font-bold text-gray-900 mb-2">{label}</p>
                   {[...payload]
                     .sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0))
                     .map((p) => (

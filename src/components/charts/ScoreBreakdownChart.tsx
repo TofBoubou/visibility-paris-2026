@@ -76,7 +76,7 @@ export function ScoreBreakdownChart({ data, height = 300 }: ScoreBreakdownChartP
               );
               return (
                 <div className="bg-white border border-brand-blue/20 rounded-lg p-3 shadow-lg">
-                  <p className="font-bold text-brand-blue mb-2">{label}</p>
+                  <p className="font-bold text-gray-900 mb-2">{label}</p>
                   {payload.map((p) => (
                     <div key={p.dataKey} className="flex justify-between gap-4 text-sm">
                       <span style={{ color: p.color }}>{LABELS[p.dataKey as keyof typeof LABELS]}</span>
@@ -85,7 +85,7 @@ export function ScoreBreakdownChart({ data, height = 300 }: ScoreBreakdownChartP
                   ))}
                   <div className="border-t border-brand-blue/20 mt-2 pt-2 flex justify-between">
                     <span className="font-bold">Total</span>
-                    <span className="font-bold text-brand-pink">{total.toFixed(1)}</span>
+                    <span className="font-bold text-blue-600">{total.toFixed(1)}</span>
                   </div>
                 </div>
               );

@@ -5,7 +5,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-brand-blue/10", className)}
+      className={cn("animate-pulse rounded-md bg-gray-200", className)}
       {...props}
     />
   );
@@ -13,7 +13,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
 
 export function CardSkeleton() {
   return (
-    <div className="p-4 bg-white rounded-xl border border-brand-blue/10 shadow-sm">
+    <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-lg" />
         <div className="space-y-2">
@@ -69,17 +69,17 @@ export function DashboardSkeleton() {
           ))}
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-brand-blue/10 p-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
             <ChartSkeleton height={300} />
           </div>
-          <div className="bg-white rounded-xl border border-brand-blue/10 p-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
             <ChartSkeleton height={300} />
           </div>
         </div>
       </div>
 
       {/* Table skeleton */}
-      <div className="bg-white rounded-xl border border-brand-blue/10 p-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
         <Skeleton className="h-6 w-40 mb-4" />
         <TableSkeleton rows={6} />
       </div>
