@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fonts */
+@font-face {
+  font-family: "Puffin Display";
+  src: url("/fonts/PuffinDisplay-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Puffin Display";
+  src: url("/fonts/PuffinDisplay-BlackItalic.otf") format("opentype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Myriad Variable Concept";
+  src: url("/fonts/MyriadVariableConcept.woff2") format("woff2"),
+       url("/fonts/MyriadVariableConcept.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Charte graphique Sarah Knafo Paris */
+  --brand-cream: #FCEFD0;
+  --brand-yellow: #FBCD41;
+  --brand-blue: #22496A;
+  --brand-pink: #E1386E;
+
+  /* Fonts */
+  --font-puffin: "Puffin Display", sans-serif;
+  --font-myriad: "Myriad Variable Concept", sans-serif;
+
+  /* shadcn/ui variables - Light theme avec charte */
+  --background: 45 58% 91%; /* cream */
+  --foreground: 209 52% 27%; /* blue */
+
+  --card: 0 0% 100%;
+  --card-foreground: 209 52% 27%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 209 52% 27%;
+
+  --primary: 340 75% 55%; /* pink */
+  --primary-foreground: 45 58% 91%;
+
+  --secondary: 43 96% 62%; /* yellow */
+  --secondary-foreground: 209 52% 27%;
+
+  --muted: 45 30% 85%;
+  --muted-foreground: 209 30% 45%;
+
+  --accent: 43 96% 62%;
+  --accent-foreground: 209 52% 27%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 209 30% 80%;
+  --input: 209 30% 80%;
+  --ring: 340 75% 55%;
+
+  --radius: 0.75rem;
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-puffin);
+  background-color: var(--brand-cream);
+  color: var(--brand-blue);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-puffin);
+  font-weight: 900;
+  font-style: italic;
+  color: var(--brand-pink);
+}
+
+h1 {
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+  h2 {
+    font-size: 1.75rem;
+  }
+  h3 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Labels and subtitles */
+.subtitle, .label {
+  font-family: var(--font-myriad);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Utility classes */
+.text-shadow-3d {
+  text-shadow: 3px 3px 0 var(--brand-yellow);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--brand-cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brand-blue);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-pink);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--brand-pink);
+  color: var(--brand-cream);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--brand-pink);
+  outline-offset: 2px;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 73, 106, 0.15);
+}
