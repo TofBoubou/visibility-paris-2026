@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { cacheGet, cacheSet, buildCacheKey, CACHE_DURATION } from "@/lib/cache";
 
 const THEMES_PROMPT = `Tu analyses des titres d'articles de presse et de vidéos YouTube concernant une personnalité politique.
 
@@ -27,7 +28,20 @@ interface ThemesResponse {
     tone: "positif" | "neutre" | "négatif";
     examples: string[];
   }>;
+  fromCache?: boolean;
   error?: string;
+}
+
+// Create a simple hash of titles for cache key
+function hashTitles(titles: string[]): string {
+  const str = titles.join("|");
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
 }
 
 export async function POST(request: NextRequest) {
@@ -56,6 +70,20 @@ export async function POST(request: NextRequest) {
         themes: [],
       });
     }
+
+    // Build cache key with hash of all titles
+    const allTitles = [...limitedPress, ...limitedYoutube];
+    const titlesHash = hashTitles(allTitles);
+    const cacheKey = buildCacheKey("themes", `${candidateName}_${titlesHash}`);
+
+    // Try to get from cache first
+    const cached = await cacheGet<ThemesResponse>(cacheKey);
+    if (cached) {
+      console.log(`[Themes] Cache HIT for ${candidateName}`);
+      return NextResponse.json({ ...cached, fromCache: true });
+    }
+
+    console.log(`[Themes] Cache MISS for ${candidateName}, calling Claude...`);
 
     // Build the analysis prompt
     let content = `Personnalité: ${candidateName}\n\n`;
@@ -106,11 +134,11 @@ export async function POST(request: NextRequest) {
         })),
       };
 
-      return NextResponse.json(result, {
-        headers: {
-          "Cache-Control": "public, s-maxage=43200, stale-while-revalidate=86400",
-        },
-      });
+      // Save to cache (24h)
+      await cacheSet(cacheKey, result, CACHE_DURATION.THEMES);
+      console.log(`[Themes] Cached result for ${candidateName}`);
+
+      return NextResponse.json({ ...result, fromCache: false });
     } catch {
       console.error("Failed to parse themes JSON:", responseText);
       return NextResponse.json({

@@ -26,7 +26,7 @@ export const PERIOD_LABELS: Record<Period, string> = {
 export const usePeriodStore = create<PeriodState>()(
   persist(
     (set, get) => ({
-      period: "14d",
+      period: "7d",
       setPeriod: (period) => set({ period }),
       getDateRange: () => {
         const days = PERIOD_DAYS[get().period];

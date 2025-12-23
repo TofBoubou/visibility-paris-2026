@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cacheGet, cacheSet, CACHE_DURATION } from "@/lib/cache";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
+
+// Cache buckets: 7 days or 30 days
+type CacheBucket = "7" | "30";
 
 interface YouTubeVideo {
   id: string;
@@ -35,10 +39,27 @@ interface YouTubeResponse {
   error?: string;
 }
 
+// Determine cache bucket based on requested days
+function getCacheBucket(days: number): CacheBucket {
+  // 24h (1) and 7d (7) use 7-day bucket
+  // 14d (14) and 30d (30) use 30-day bucket
+  return days <= 7 ? "7" : "30";
+}
+
+// Get actual days to fetch based on bucket
+function getBucketDays(bucket: CacheBucket): number {
+  return bucket === "7" ? 7 : 30;
+}
+
+// Get cache duration based on bucket
+function getCacheDuration(bucket: CacheBucket): number {
+  return bucket === "7" ? CACHE_DURATION.YOUTUBE_7D : CACHE_DURATION.YOUTUBE_30D;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const searchTerm = searchParams.get("q");
-  const days = parseInt(searchParams.get("days") || "30", 10);
+  const requestedDays = parseInt(searchParams.get("days") || "7", 10);
   const channelHandle = searchParams.get("channel");
 
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -54,10 +75,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing search term" }, { status: 400 });
   }
 
+  // Determine cache bucket and actual fetch days
+  const bucket = getCacheBucket(requestedDays);
+  const fetchDays = getBucketDays(bucket);
+  const cacheKey = `youtube:${searchTerm.toLowerCase().replace(/\s+/g, "_")}:${bucket}d`;
+
+  // Try cache first
+  const cached = await cacheGet<YouTubeResponse>(cacheKey);
+  if (cached) {
+    console.log(`[YouTube] Cache HIT for ${searchTerm} (${bucket}d bucket)`);
+    // Filter videos by requested period and recalculate stats
+    const filtered = filterVideosByDays(cached.videos, requestedDays);
+    const stats = calculateStats(filtered);
+    return NextResponse.json({ ...stats, videos: filtered, fromCache: true, bucket });
+  }
+
+  console.log(`[YouTube] Cache MISS for ${searchTerm} (${bucket}d bucket), fetching...`);
+
   try {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    startDate.setDate(startDate.getDate() - fetchDays);
 
     const publishedAfter = startDate.toISOString();
     const publishedBefore = endDate.toISOString();
@@ -162,43 +200,32 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Calculate aggregates
-    const totalViews = videos.reduce((sum, v) => sum + v.views, 0);
-    const totalLikes = videos.reduce((sum, v) => sum + v.likes, 0);
-    const totalComments = videos.reduce((sum, v) => sum + v.comments, 0);
+    // Calculate full stats for caching
+    const fullStats = calculateStats(videos);
 
-    const shorts = videos.filter((v) => v.isShort);
-    const longs = videos.filter((v) => !v.isShort);
-
-    const shortsViews = shorts.reduce((sum, v) => sum + v.views, 0);
-    const shortsLikes = shorts.reduce((sum, v) => sum + v.likes, 0);
-    const shortsComments = shorts.reduce((sum, v) => sum + v.comments, 0);
-    const longVideosViews = longs.reduce((sum, v) => sum + v.views, 0);
-    const longLikes = longs.reduce((sum, v) => sum + v.likes, 0);
-    const longComments = longs.reduce((sum, v) => sum + v.comments, 0);
-
-    const result: YouTubeResponse = {
+    // Build full result for cache (with all videos from bucket)
+    const fullResult: YouTubeResponse = {
       videos,
-      totalViews,
-      totalLikes,
-      totalComments,
-      shortsViews,
-      shortsLikes,
-      shortsComments,
-      longVideosViews,
-      longLikes,
-      longComments,
-      shortsCount: shorts.length,
-      longCount: longs.length,
-      avgViewsPerVideo: videos.length > 0 ? Math.round(totalViews / videos.length) : 0,
+      ...fullStats,
       officialChannel: channelHandle || undefined,
       fromCache: false,
     };
 
-    return NextResponse.json(result, {
-      headers: {
-        "Cache-Control": "public, s-maxage=43200, stale-while-revalidate=86400",
-      },
+    // Save to cache
+    const cacheDuration = getCacheDuration(bucket);
+    await cacheSet(cacheKey, fullResult, cacheDuration);
+    console.log(`[YouTube] Cached ${videos.length} videos for ${searchTerm} (${bucket}d bucket, ${cacheDuration/3600}h TTL)`);
+
+    // Filter by requested period and recalculate stats for response
+    const filteredVideos = filterVideosByDays(videos, requestedDays);
+    const filteredStats = calculateStats(filteredVideos);
+
+    return NextResponse.json({
+      videos: filteredVideos,
+      ...filteredStats,
+      officialChannel: channelHandle || undefined,
+      fromCache: false,
+      bucket,
     });
   } catch (error) {
     console.error("YouTube API error:", error);
@@ -235,4 +262,38 @@ function parseDuration(duration: string): number {
   const seconds = parseInt(match[3] || "0", 10);
 
   return hours * 3600 + minutes * 60 + seconds;
+}
+
+// Filter videos by number of days from today
+function filterVideosByDays(videos: YouTubeVideo[], days: number): YouTubeVideo[] {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+  const cutoffStr = cutoffDate.toISOString().slice(0, 10);
+
+  return videos.filter(v => v.published >= cutoffStr);
+}
+
+// Calculate aggregate stats from a list of videos
+function calculateStats(videos: YouTubeVideo[]) {
+  const totalViews = videos.reduce((sum, v) => sum + v.views, 0);
+  const totalLikes = videos.reduce((sum, v) => sum + v.likes, 0);
+  const totalComments = videos.reduce((sum, v) => sum + v.comments, 0);
+
+  const shorts = videos.filter((v) => v.isShort);
+  const longs = videos.filter((v) => !v.isShort);
+
+  return {
+    totalViews,
+    totalLikes,
+    totalComments,
+    shortsViews: shorts.reduce((sum, v) => sum + v.views, 0),
+    shortsLikes: shorts.reduce((sum, v) => sum + v.likes, 0),
+    shortsComments: shorts.reduce((sum, v) => sum + v.comments, 0),
+    longVideosViews: longs.reduce((sum, v) => sum + v.views, 0),
+    longLikes: longs.reduce((sum, v) => sum + v.likes, 0),
+    longComments: longs.reduce((sum, v) => sum + v.comments, 0),
+    shortsCount: shorts.length,
+    longCount: longs.length,
+    avgViewsPerVideo: videos.length > 0 ? Math.round(totalViews / videos.length) : 0,
+  };
 }

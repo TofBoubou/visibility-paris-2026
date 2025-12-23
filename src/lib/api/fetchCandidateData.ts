@@ -1,6 +1,23 @@
 import { Candidate } from "@/types/candidate";
 import { PERIOD_DAYS, Period } from "@/stores/period";
 
+interface TrendData {
+  keyword: string;
+  currentValue: number;
+  maxValue: number;
+  avgValue: number;
+  available: boolean;
+  fromCache?: boolean;
+}
+
+interface TrendsApiResponse {
+  results: Record<string, TrendData>;
+  cached: number;
+  fetched: number;
+  failed: number;
+  rateLimited: boolean;
+}
+
 export interface CandidateFullData {
   candidate: Candidate;
   wikipedia: {
@@ -77,18 +94,65 @@ export async function fetchCandidateData(
   };
 }
 
+// Fetch trends for all candidates at once (progressive caching)
+async function fetchTrendsForCandidates(
+  candidates: Candidate[],
+  days: number
+): Promise<Record<string, number>> {
+  try {
+    const keywords = candidates.map((c) => c.searchTerms[0]);
+
+    const response = await fetch("/api/trends", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keywords, days }),
+    });
+
+    if (!response.ok) {
+      console.error("[Trends] API error:", response.status);
+      return {};
+    }
+
+    const data: TrendsApiResponse = await response.json();
+    console.log(`[Trends] Cached: ${data.cached}, Fetched: ${data.fetched}, Failed: ${data.failed}, Rate limited: ${data.rateLimited}`);
+
+    // Convert to simple keyword -> value map
+    const trendsMap: Record<string, number> = {};
+    for (const [keyword, trend] of Object.entries(data.results)) {
+      // Use avgValue as the trend score (0-100 scale from Google Trends)
+      trendsMap[keyword] = trend.available ? trend.avgValue : 0;
+    }
+
+    return trendsMap;
+  } catch (error) {
+    console.error("[Trends] Fetch error:", error);
+    return {};
+  }
+}
+
 export async function fetchAllCandidatesData(
   candidates: Candidate[],
   period: Period
 ): Promise<CandidateFullData[]> {
-  // Fetch data for all candidates in parallel (with some batching to avoid overwhelming the API)
+  const days = PERIOD_DAYS[period];
+
+  // Fetch trends for all candidates first (with progressive caching)
+  const trendsMap = await fetchTrendsForCandidates(candidates, days);
+
+  // Then fetch other data for all candidates in parallel (with batching)
   const batchSize = 4;
   const results: CandidateFullData[] = [];
 
   for (let i = 0; i < candidates.length; i += batchSize) {
     const batch = candidates.slice(i, i + batchSize);
     const batchResults = await Promise.all(
-      batch.map((candidate) => fetchCandidateData(candidate, period))
+      batch.map(async (candidate) => {
+        const data = await fetchCandidateData(candidate, period);
+        // Override trends with actual value from trendsMap
+        const searchTerm = candidate.searchTerms[0];
+        data.trends = trendsMap[searchTerm] ?? 0;
+        return data;
+      })
     );
     results.push(...batchResults);
   }

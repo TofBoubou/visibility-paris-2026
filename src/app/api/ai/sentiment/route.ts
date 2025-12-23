@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { cacheGet, cacheSet, buildCacheKey, CACHE_DURATION } from "@/lib/cache";
 
 const SENTIMENT_PROMPT = `Tu analyses le sentiment de titres de presse et vidéos concernant une personnalité politique.
 
@@ -20,7 +21,20 @@ interface SentimentResponse {
   neutral: number;
   negative: number;
   total: number;
+  fromCache?: boolean;
   error?: string;
+}
+
+// Create a simple hash of titles for cache key
+function hashTitles(titles: string[]): string {
+  const str = titles.join("|");
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
 }
 
 export async function POST(request: NextRequest) {
@@ -42,6 +56,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Limit to 25 titles per batch
+    const limitedTitles = titles.slice(0, 25);
+
+    // Build cache key with title hash
+    const titlesHash = hashTitles(limitedTitles);
+    const cacheKey = buildCacheKey("sentiment", `${candidateName}_${titlesHash}`);
+
+    // Try to get from cache first
+    const cached = await cacheGet<SentimentResponse>(cacheKey);
+    if (cached) {
+      console.log(`[Sentiment] Cache HIT for ${candidateName}`);
+      return NextResponse.json({ ...cached, fromCache: true });
+    }
+
+    console.log(`[Sentiment] Cache MISS for ${candidateName}, calling Claude...`);
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -49,9 +79,6 @@ export async function POST(request: NextRequest) {
         { status: 200 }
       );
     }
-
-    // Limit to 25 titles per batch
-    const limitedTitles = titles.slice(0, 25);
 
     // Build numbered list
     const numberedList = limitedTitles
@@ -113,11 +140,11 @@ export async function POST(request: NextRequest) {
         total,
       };
 
-      return NextResponse.json(result, {
-        headers: {
-          "Cache-Control": "public, s-maxage=43200, stale-while-revalidate=86400",
-        },
-      });
+      // Save to cache (24h)
+      await cacheSet(cacheKey, result, CACHE_DURATION.SENTIMENT);
+      console.log(`[Sentiment] Cached result for ${candidateName}`);
+
+      return NextResponse.json({ ...result, fromCache: false });
     } catch {
       console.error("Failed to parse sentiment JSON:", responseText);
       return NextResponse.json({
