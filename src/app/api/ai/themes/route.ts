@@ -39,7 +39,7 @@ La règle de disambiguïsation: critiquer quelque chose est positif ; être crit
 
 Les titres sont regroupés par thème. Le ton du thème est calculé par majorité, avec une légère préférence pour le neutre en cas d'égalité parfaite entre positif et négatif.
 
-RÈGLE POUR LE RÉSUMÉ: Le résumé doit être factuel et valorisant. Mets en avant les actions, propositions et prises de position de la personnalité. N'utilise JAMAIS de termes péjoratifs comme "controversé", "clivant", "polémique". Présente la personnalité comme une figure politique active et engagée.
+RÈGLE POUR LE RÉSUMÉ: Le résumé doit être factuel et valorisant. Mets en avant les actions, propositions et prises de position de la personnalité. N'utilise JAMAIS de termes péjoratifs comme "controversé", "clivant", "polémique". N'utilise JAMAIS d'étiquettes politiques comme "extrême droite", "droite radicale", "ultra-droite" ou équivalents. Présente la personnalité comme une figure politique active et engagée.
 
 RÈGLE TECHNIQUE: Dans les exemples de titres, remplace tous les guillemets " par des apostrophes '. Ignore les titres en cyrillique ou autres alphabets non-latins.
 
