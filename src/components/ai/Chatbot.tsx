@@ -42,6 +42,18 @@ export function Chatbot({ context, period = 7 }: ChatbotProps) {
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
+    // Track question to JSONBin (fire and forget)
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: userMessage,
+        context: context?.periode || "unknown",
+      }),
+    }).catch(() => {
+      // Silently ignore tracking errors
+    });
+
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",

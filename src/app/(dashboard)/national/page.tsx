@@ -30,6 +30,7 @@ import {
   Newspaper,
   Loader2,
   ChevronDown,
+  ExternalLink,
 } from "lucide-react";
 
 interface CandidateData {
@@ -388,7 +389,7 @@ export default function NationalPage() {
       {/* Tabs */}
       {!isLoading && sortedData && (
         <Tabs defaultValue="scores" className="w-full">
-          <TabsList className="flex-wrap">
+          <TabsList className="flex-wrap sticky top-12 md:top-14 z-40 bg-gray-100 -mx-3 md:-mx-4 lg:-mx-6 px-3 md:px-4 lg:px-6 py-2">
             <TabsTrigger value="scores">
               <TrendingUp className="w-4 h-4 mr-1.5" />
               Scores
@@ -424,40 +425,136 @@ export default function NationalPage() {
           </TabsList>
 
           <TabsContent value="scores">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              {/* Ranking Table with Themes */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Score global</CardTitle>
+                  <CardTitle>Classement général</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ScoreBarChart
-                    data={sortedData.map((c) => ({
-                      name: c.name,
-                      score: c.score.total,
-                      color: c.color,
-                      highlighted: c.highlighted,
-                    }))}
-                    height={Math.max(300, sortedData.length * 35)}
-                  />
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            #
+                          </th>
+                          <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Candidat
+                          </th>
+                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Score
+                          </th>
+                          <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Thèmes principaux
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedData.map((candidate, index) => {
+                          const candidateThemes = themesData?.find(
+                            (t) => t.candidateName === candidate.name
+                          )?.themes || [];
+                          return (
+                            <tr
+                              key={candidate.id}
+                              className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                                candidate.highlighted ? "bg-blue-50" : ""
+                              }`}
+                            >
+                              <td className="py-3 px-2 font-bold text-gray-900">
+                                {index + 1}
+                              </td>
+                              <td className="py-3 px-2">
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className="w-3 h-3 rounded-full flex-shrink-0"
+                                    style={{ backgroundColor: candidate.color }}
+                                  />
+                                  <span
+                                    className={
+                                      candidate.highlighted
+                                        ? "font-bold text-blue-600"
+                                        : ""
+                                    }
+                                  >
+                                    {candidate.name}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-2 text-right font-bold">
+                                {candidate.score.total.toFixed(1)}
+                              </td>
+                              <td className="py-3 px-2">
+                                <div className="flex flex-wrap gap-1.5">
+                                  {candidateThemes.slice(0, 3).map((theme, i) => (
+                                    <span
+                                      key={i}
+                                      className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
+                                        theme.tone === "positif"
+                                          ? "text-green-600 bg-green-50"
+                                          : theme.tone === "négatif"
+                                          ? "text-red-600 bg-red-50"
+                                          : "text-gray-600 bg-gray-100"
+                                      }`}
+                                    >
+                                      {theme.theme}
+                                      <span className="opacity-70">({theme.count})</span>
+                                    </span>
+                                  ))}
+                                  {candidateThemes.length === 0 && !themesLoading && (
+                                    <span className="text-gray-400 text-xs">-</span>
+                                  )}
+                                  {themesLoading && (
+                                    <span className="text-gray-400 text-xs">Analyse...</span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Décomposition</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScoreBreakdownChart
-                    data={sortedData.map((c) => ({
-                      name: c.name,
-                      trends: c.score.contributions.trends,
-                      press: c.score.contributions.press,
-                      wikipedia: c.score.contributions.wikipedia,
-                      youtube: c.score.contributions.youtube,
-                    }))}
-                    height={Math.max(300, sortedData.length * 35)}
-                  />
-                </CardContent>
-              </Card>
+
+              {/* Charts */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Score global</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScoreBarChart
+                      data={sortedData.map((c) => ({
+                        name: c.name,
+                        score: c.score.total,
+                        color: c.color,
+                        highlighted: c.highlighted,
+                      }))}
+                      height={Math.max(300, sortedData.length * 35)}
+                    />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Décomposition</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScoreBreakdownChart
+                      data={sortedData.map((c) => ({
+                        name: c.name,
+                        trends: c.score.contributions.trends,
+                        press: c.score.contributions.press,
+                        wikipedia: c.score.contributions.wikipedia,
+                        youtube: c.score.contributions.youtube,
+                      }))}
+                      height={Math.max(300, sortedData.length * 35)}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
@@ -903,18 +1000,21 @@ function ExpandablePressCard({
       {topMedia && (
         <p className="text-xs text-gray-500 mb-2">Top média: {topMedia}</p>
       )}
-      {displayArticles.map((article, i) => (
-        <a
-          key={i}
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-sm text-gray-900 hover:text-blue-600 mt-1 truncate"
-          onClick={(e) => e.stopPropagation()}
-        >
-          → {article.title}
-        </a>
-      ))}
+      <div className="space-y-1">
+        {displayArticles.map((article, i) => (
+          <a
+            key={i}
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-sm text-gray-700 hover:text-blue-600 group"
+          >
+            <span className="truncate">→ {article.title}</span>
+            <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </a>
+        ))}
+      </div>
       {!expanded && articles.length > 3 && (
         <p className="text-xs text-blue-600 mt-2">
           + {articles.length - 3} autres articles

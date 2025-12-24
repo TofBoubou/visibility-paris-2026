@@ -72,10 +72,17 @@
 }
 
 /* Base styles */
+html {
+  overflow-x: hidden;
+  background-color: #F9FAFB;
+}
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
   background-color: #F9FAFB;
   color: #1F2937;
+  overflow-x: hidden;
+  min-width: 100%;
 }
 
 h1, h2, h3 {
