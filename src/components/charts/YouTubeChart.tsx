@@ -34,12 +34,12 @@ function formatViews(value: number): string {
   return value.toString();
 }
 
-function truncateName(name: string, maxLength: number): string {
-  if (name.length <= maxLength) return name;
-  // On mobile, try to use just first name
-  const firstName = name.split(" ")[0];
-  if (firstName.length <= maxLength) return firstName;
-  return name.substring(0, maxLength - 1) + "…";
+function truncateName(name: string, isMobile: boolean): string {
+  if (!isMobile) return name;
+  // On mobile, use last name only
+  const parts = name.split(" ");
+  const lastName = parts[parts.length - 1];
+  return lastName;
 }
 
 export function YouTubeChart({
@@ -56,12 +56,8 @@ export function YouTubeChart({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Responsive values - much more compact on mobile
-  const yAxisWidth = isMobile ? 55 : 95;
-  const leftMargin = isMobile ? 60 : 100;
-  const rightMargin = isMobile ? 10 : 30;
-  const fontSize = isMobile ? 9 : 12;
-  const maxNameLength = isMobile ? 8 : 20;
+  // Responsive values
+  const fontSize = isMobile ? 11 : 12;
 
   // Sort by total views descending
   const sortedData = [...data].sort((a, b) => b.totalViews - a.totalViews);
@@ -69,7 +65,7 @@ export function YouTubeChart({
   // Prepare data with truncated names for display
   const displayData = sortedData.map((item) => ({
     ...item,
-    displayName: truncateName(item.name, maxNameLength),
+    displayName: truncateName(item.name, isMobile),
   }));
 
   if (variant === "breakdown") {
@@ -78,7 +74,7 @@ export function YouTubeChart({
         <BarChart
           data={displayData}
           layout="vertical"
-          margin={{ top: 5, right: rightMargin, left: leftMargin, bottom: 5 }}
+          margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#22496A20" />
           <XAxis
@@ -92,7 +88,6 @@ export function YouTubeChart({
             dataKey="displayName"
             tick={{ fill: "#22496A", fontSize }}
             tickLine={{ stroke: "#22496A40" }}
-            width={yAxisWidth}
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -140,7 +135,7 @@ export function YouTubeChart({
       <BarChart
         data={displayData}
         layout="vertical"
-        margin={{ top: 5, right: rightMargin, left: leftMargin, bottom: 5 }}
+        margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#22496A20" />
         <XAxis
@@ -154,7 +149,6 @@ export function YouTubeChart({
           dataKey="displayName"
           tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
-          width={yAxisWidth}
         />
         <Tooltip
           content={({ active, payload }) => {

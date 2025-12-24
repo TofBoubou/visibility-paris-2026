@@ -30,12 +30,12 @@ function getSentimentColor(value: number): string {
   return "#22496A80"; // Gray - neutral
 }
 
-function truncateName(name: string, maxLength: number): string {
-  if (name.length <= maxLength) return name;
-  // On mobile, try to use just first name
-  const firstName = name.split(" ")[0];
-  if (firstName.length <= maxLength) return firstName;
-  return name.substring(0, maxLength - 1) + "…";
+function truncateName(name: string, isMobile: boolean): string {
+  if (!isMobile) return name;
+  // On mobile, use last name only
+  const parts = name.split(" ");
+  const lastName = parts[parts.length - 1];
+  return lastName;
 }
 
 export function SentimentChart({ data, height = 300 }: SentimentChartProps) {
@@ -51,17 +51,13 @@ export function SentimentChart({ data, height = 300 }: SentimentChartProps) {
   // Sort by sentiment descending
   const sortedData = [...data].sort((a, b) => b.sentiment - a.sentiment);
 
-  // Responsive values - much more compact on mobile
-  const yAxisWidth = isMobile ? 55 : 95;
-  const leftMargin = isMobile ? 60 : 100;
-  const rightMargin = isMobile ? 10 : 30;
-  const fontSize = isMobile ? 9 : 12;
-  const maxNameLength = isMobile ? 8 : 20;
+  // Responsive values
+  const fontSize = isMobile ? 11 : 12;
 
   // Prepare data with truncated names for display
   const displayData = sortedData.map((item) => ({
     ...item,
-    displayName: truncateName(item.name, maxNameLength),
+    displayName: truncateName(item.name, isMobile),
   }));
 
   return (
@@ -69,7 +65,7 @@ export function SentimentChart({ data, height = 300 }: SentimentChartProps) {
       <BarChart
         data={displayData}
         layout="vertical"
-        margin={{ top: 5, right: rightMargin, left: leftMargin, bottom: 5 }}
+        margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#22496A20" />
         <XAxis
@@ -84,7 +80,6 @@ export function SentimentChart({ data, height = 300 }: SentimentChartProps) {
           dataKey="displayName"
           tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
-          width={yAxisWidth}
         />
         <ReferenceLine x={0} stroke="#22496A" strokeWidth={2} />
         <Tooltip
