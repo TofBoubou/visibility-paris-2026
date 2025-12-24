@@ -222,12 +222,13 @@ export default function NationalPage() {
       if (!candidatesData || candidatesData.length === 0) return null;
       const results = await Promise.all(
         candidatesData.map(async (c) => {
-          const titles = c.press.articles.slice(0, 15).map((a) => a.title);
-          if (titles.length === 0) return { candidateName: c.name, themes: [], summary: "" };
+          const pressTitles = c.press.articles.slice(0, 50).map((a) => a.title);
+          const youtubeTitles = c.youtube.videos.slice(0, 50).map((v) => v.title);
+          if (pressTitles.length === 0 && youtubeTitles.length === 0) return { candidateName: c.name, themes: [], summary: "" };
           const res = await fetch("/api/ai/themes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ candidateName: c.name, titles }),
+            body: JSON.stringify({ candidateName: c.name, pressTitles, youtubeTitles }),
           });
           const data = await res.json();
           return { candidateName: c.name, themes: data.themes || [], summary: data.summary || "" };
