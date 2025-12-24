@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       content += limitedYoutube.map((t: string) => `- ${t}`).join("\n");
     }
 
-    const client = new Anthropic({ apiKey });
+    const client = new Anthropic({ apiKey, maxRetries: 3 });
 
     const message = await client.messages.create({
       model: "claude-3-haiku-20240307",

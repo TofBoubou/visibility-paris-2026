@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     const content = `Personnalité: ${candidateName}\n\nTitres à analyser:\n${numberedList}`;
 
-    const client = new Anthropic({ apiKey });
+    const client = new Anthropic({ apiKey, maxRetries: 3 });
 
     const message = await client.messages.create({
       model: "claude-3-haiku-20240307",
