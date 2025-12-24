@@ -64,6 +64,65 @@ function hashTitles(titles: string[]): string {
   return Math.abs(hash).toString(36);
 }
 
+// Batch size for Claude API calls
+const BATCH_SIZE = 10;
+
+// Helper to split array into chunks
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
+// Helper to delay between API calls
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Analyze a single batch of titles
+async function analyzeBatch(
+  client: Anthropic,
+  candidateName: string,
+  titles: string[],
+  promptToUse: string,
+  batchIndex: number
+): Promise<Record<string, number>> {
+  const numberedList = titles
+    .map((t: string, i: number) => `${i + 1}. ${t}`)
+    .join("\n");
+
+  const content = `Personnalité: ${candidateName}\n\nTitres à analyser:\n${numberedList}`;
+
+  const message = await client.messages.create({
+    model: "claude-3-haiku-20240307",
+    max_tokens: 512,
+    system: promptToUse,
+    messages: [{ role: "user", content }],
+  });
+
+  const responseText = message.content[0].type === "text"
+    ? message.content[0].text
+    : "{}";
+
+  const cleanJson = responseText.replace(/```json\n?|\n?```/g, "").trim();
+  const parsed = JSON.parse(cleanJson) as Record<string, number>;
+
+  // Convert to scores object with original titles as keys
+  const scores: Record<string, number> = {};
+  for (const [key, value] of Object.entries(parsed)) {
+    const index = parseInt(key, 10) - 1;
+    if (index >= 0 && index < titles.length) {
+      const score = typeof value === "number" ? Math.max(-1, Math.min(1, value)) : 0;
+      scores[titles[index]] = Math.round(score * 100) / 100;
+    }
+  }
+
+  console.log(`[Sentiment] Batch ${batchIndex + 1} analyzed: ${Object.keys(scores).length} titles`);
+  return scores;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { candidateName, titles, source = "press" } = await request.json();
@@ -83,8 +142,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Limit to 25 titles per batch
-    const limitedTitles = titles.slice(0, 25);
+    // Limit to 50 titles max (5 batches of 10)
+    const limitedTitles = titles.slice(0, 50);
 
     // Build cache key with title hash and source
     const titlesHash = hashTitles(limitedTitles);
@@ -97,7 +156,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ...cached, fromCache: true });
     }
 
-    console.log(`[Sentiment] Cache MISS for ${candidateName} (${source}), calling Claude...`);
+    console.log(`[Sentiment] Cache MISS for ${candidateName} (${source}), analyzing ${limitedTitles.length} titles in batches...`);
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
@@ -106,13 +165,6 @@ export async function POST(request: NextRequest) {
         { status: 200 }
       );
     }
-
-    // Build numbered list
-    const numberedList = limitedTitles
-      .map((t: string, i: number) => `${i + 1}. ${t}`)
-      .join("\n");
-
-    const content = `Personnalité: ${candidateName}\n\nTitres à analyser:\n${numberedList}`;
 
     // Check if candidate should use favorable prompt
     const isFavorable = FAVORABLE_CANDIDATES.some(
@@ -126,36 +178,30 @@ export async function POST(request: NextRequest) {
 
     const client = new Anthropic({ apiKey, maxRetries: 3 });
 
-    const message = await client.messages.create({
-      model: "claude-3-haiku-20240307",
-      max_tokens: 512,
-      system: promptToUse,
-      messages: [
-        {
-          role: "user",
-          content,
-        },
-      ],
-    });
+    // Split titles into batches
+    const batches = chunkArray(limitedTitles, BATCH_SIZE);
+    console.log(`[Sentiment] Processing ${batches.length} batches for ${candidateName}`);
 
-    const responseText = message.content[0].type === "text"
-      ? message.content[0].text
-      : "{}";
+    // Process batches sequentially with delay to avoid rate limits
+    const allScores: Record<string, number> = {};
+    for (let i = 0; i < batches.length; i++) {
+      try {
+        const batchScores = await analyzeBatch(client, candidateName, batches[i], promptToUse, i);
+        Object.assign(allScores, batchScores);
 
-    // Parse JSON response
-    try {
-      const cleanJson = responseText.replace(/```json\n?|\n?```/g, "").trim();
-      const parsed = JSON.parse(cleanJson) as Record<string, number>;
-
-      // Convert to scores object with original titles as keys
-      const scores: Record<string, number> = {};
-      for (const [key, value] of Object.entries(parsed)) {
-        const index = parseInt(key, 10) - 1;
-        if (index >= 0 && index < limitedTitles.length) {
-          const score = typeof value === "number" ? Math.max(-1, Math.min(1, value)) : 0;
-          scores[limitedTitles[index]] = Math.round(score * 100) / 100;
+        // Add delay between batches (except after last one)
+        if (i < batches.length - 1) {
+          await delay(500); // 500ms delay between batches
         }
+      } catch (batchError) {
+        console.error(`[Sentiment] Batch ${i + 1} failed:`, batchError);
+        // Continue with other batches even if one fails
       }
+    }
+
+    // Calculate statistics from all scores
+    try {
+      const scores = allScores;
 
       // Calculate statistics
       const scoreValues = Object.values(scores);
@@ -182,16 +228,16 @@ export async function POST(request: NextRequest) {
       console.log(`[Sentiment] Cached result for ${candidateName}`);
 
       return NextResponse.json({ ...result, fromCache: false });
-    } catch {
-      console.error("Failed to parse sentiment JSON:", responseText);
+    } catch (statsError) {
+      console.error("Failed to calculate sentiment stats:", statsError);
       return NextResponse.json({
-        scores: {},
+        scores: allScores,
         average: 0,
         positive: 0,
         neutral: 0,
         negative: 0,
-        total: 0,
-        error: "Failed to parse response",
+        total: Object.keys(allScores).length,
+        error: "Failed to calculate stats",
       });
     }
   } catch (error) {
