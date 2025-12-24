@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import html2canvas from "html2canvas";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCandidatesStore } from "@/stores/candidates";
@@ -31,6 +32,7 @@ import {
   Loader2,
   ChevronDown,
   ExternalLink,
+  Download,
 } from "lucide-react";
 
 interface CandidateData {
@@ -119,6 +121,28 @@ export default function NationalPage() {
   const { selectedNational } = useCandidatesStore();
   const { period } = usePeriodStore();
   const days = PERIOD_DAYS[period];
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const exportToPng = useCallback(async () => {
+    if (!tableRef.current) return;
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(tableRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        logging: false,
+      });
+      const link = document.createElement("a");
+      link.download = `classement-national-${period}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [period]);
 
   const { data: candidatesData, isLoading } = useQuery({
     queryKey: ["national-data", selectedNational, period],
@@ -428,11 +452,27 @@ export default function NationalPage() {
             <div className="space-y-6">
               {/* Ranking Table with Themes */}
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Classement général</CardTitle>
+                  <button
+                    onClick={exportToPng}
+                    disabled={isExporting}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isExporting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                    PNG
+                  </button>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
+                  <div ref={tableRef} className="overflow-x-auto bg-white p-4">
+                    <div className="text-center mb-4">
+                      <h2 className="text-lg font-bold text-gray-900">Présidentielle 2027</h2>
+                      <p className="text-sm text-gray-500">Classement visibilité médiatique • {period}</p>
+                    </div>
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-200">
