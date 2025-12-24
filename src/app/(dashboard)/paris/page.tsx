@@ -288,17 +288,61 @@ export default function ParisPage() {
     <div className="space-y-6">
       {/* Chatbot */}
       <Chatbot
+        period={PERIOD_DAYS[period]}
         context={{
+          periode: period,
           candidates: sortedData?.reduce(
-            (acc, c) => ({
-              ...acc,
-              [c.name]: {
-                score: c.score.total,
-                wikipedia: c.wikipedia.views,
-                press: c.press.count,
-                youtube: c.youtube.totalViews,
-              },
-            }),
+            (acc, c) => {
+              const sentiment = sentimentData?.find((s) => s.name === c.name);
+              const themes = themesData?.find((t) => t.candidateName === c.name);
+              return {
+                ...acc,
+                [c.name]: {
+                  parti: c.party,
+                  score: {
+                    total: c.score.total,
+                    breakdown: c.score.breakdown,
+                  },
+                  wikipedia: {
+                    vues: c.wikipedia.views,
+                    variation: c.wikipedia.variation,
+                  },
+                  presse: {
+                    articles: c.press.count,
+                    sources: c.press.domains,
+                    topMedia: c.press.topMedia,
+                    titres: c.press.articles.slice(0, 10).map((a) => a.title),
+                  },
+                  youtube: {
+                    vuesTotal: c.youtube.totalViews,
+                    vuesShorts: c.youtube.shortsViews,
+                    vuesLong: c.youtube.longViews,
+                    likes: c.youtube.totalLikes,
+                    commentaires: c.youtube.totalComments,
+                    titres: c.youtube.videos.slice(0, 10).map((v) => v.title),
+                  },
+                  sentiment: sentiment ? {
+                    presse: {
+                      moyenne: sentiment.pressSentiment,
+                      positif: sentiment.pressPositive,
+                      neutre: sentiment.pressNeutral,
+                      negatif: sentiment.pressNegative,
+                    },
+                    youtube: {
+                      moyenne: sentiment.youtubeSentiment,
+                      positif: sentiment.youtubePositive,
+                      neutre: sentiment.youtubeNeutral,
+                      negatif: sentiment.youtubeNegative,
+                    },
+                    combine: sentiment.combinedAvg,
+                  } : null,
+                  themes: themes ? {
+                    resume: themes.summary,
+                    liste: themes.themes,
+                  } : null,
+                },
+              };
+            },
             {}
           ),
         }}

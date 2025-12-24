@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cacheGet, cacheSet, CACHE_DURATION } from "@/lib/cache";
+
+// Cache buckets: 7 days or 30 days (like YouTube)
+type CacheBucket = "7" | "30";
 
 interface Article {
   title: string;
@@ -15,25 +19,90 @@ interface PressResponse {
   topMedia: string | null;
   topMediaCount: number;
   mediaBreakdown: Array<{ domain: string; count: number }>;
+  fromCache: boolean;
   error?: string;
+}
+
+// Determine cache bucket based on requested days
+function getCacheBucket(days: number): CacheBucket {
+  return days <= 7 ? "7" : "30";
+}
+
+// Get actual days to fetch based on bucket
+function getBucketDays(bucket: CacheBucket): number {
+  return bucket === "7" ? 7 : 30;
+}
+
+// Get cache duration based on bucket
+function getCacheDuration(bucket: CacheBucket): number {
+  return bucket === "7" ? CACHE_DURATION.YOUTUBE_7D : CACHE_DURATION.YOUTUBE_30D;
+}
+
+// Filter articles by number of days from today
+function filterArticlesByDays(articles: Article[], days: number): Article[] {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+  const cutoffStr = cutoffDate.toISOString().slice(0, 10);
+  return articles.filter(a => a.date >= cutoffStr);
+}
+
+// Calculate stats from filtered articles
+function calculateStats(articles: Article[]) {
+  const domainCounts: Record<string, number> = {};
+  for (const article of articles) {
+    domainCounts[article.domain] = (domainCounts[article.domain] || 0) + 1;
+  }
+
+  const sortedDomains = Object.entries(domainCounts)
+    .sort((a, b) => b[1] - a[1]);
+
+  const mediaBreakdown = sortedDomains.slice(0, 5).map(([domain, count]) => ({
+    domain,
+    count,
+  }));
+
+  return {
+    count: articles.length,
+    domains: Object.keys(domainCounts).length,
+    topMedia: sortedDomains[0]?.[0] || null,
+    topMediaCount: sortedDomains[0]?.[1] || 0,
+    mediaBreakdown,
+  };
 }
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const searchTerm = searchParams.get("q");
-  const days = parseInt(searchParams.get("days") || "14", 10);
+  const requestedDays = parseInt(searchParams.get("days") || "14", 10);
 
-  console.log(`[Press] Request: q="${searchTerm}", days=${days}`);
+  console.log(`[Press] Request: q="${searchTerm}", days=${requestedDays}`);
 
   if (!searchTerm) {
     console.error("[Press] ERROR: Missing search term");
     return NextResponse.json({ error: "Missing search term" }, { status: 400 });
   }
 
+  // Determine cache bucket and actual fetch days
+  const bucket = getCacheBucket(requestedDays);
+  const fetchDays = getBucketDays(bucket);
+  const cacheKey = `press:${searchTerm.toLowerCase().replace(/\s+/g, "_")}:${bucket}d`;
+
+  // Try cache first
+  const cached = await cacheGet<PressResponse>(cacheKey);
+  if (cached) {
+    console.log(`[Press] Cache HIT for ${searchTerm} (${bucket}d bucket)`);
+    // Filter articles by requested period and recalculate stats
+    const filtered = filterArticlesByDays(cached.articles, requestedDays);
+    const stats = calculateStats(filtered);
+    return NextResponse.json({ articles: filtered, ...stats, fromCache: true, bucket });
+  }
+
+  console.log(`[Press] Cache MISS for ${searchTerm} (${bucket}d bucket), fetching...`);
+
   try {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    startDate.setDate(startDate.getDate() - fetchDays);
 
     // Fetch from both sources in parallel
     const [gdeltArticles, googleNewsArticles] = await Promise.all([
@@ -61,35 +130,30 @@ export async function GET(request: NextRequest) {
     // Sort by date descending
     uniqueArticles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Calculate domain statistics
-    const domainCounts: Record<string, number> = {};
-    for (const article of uniqueArticles) {
-      domainCounts[article.domain] = (domainCounts[article.domain] || 0) + 1;
-    }
+    // Calculate full stats for caching
+    const fullStats = calculateStats(uniqueArticles);
 
-    const sortedDomains = Object.entries(domainCounts)
-      .sort((a, b) => b[1] - a[1]);
-
-    const mediaBreakdown = sortedDomains.slice(0, 5).map(([domain, count]) => ({
-      domain,
-      count,
-    }));
-
-    const result: PressResponse = {
+    // Build full result for cache (with all articles from bucket)
+    const fullResult: PressResponse = {
       articles: uniqueArticles,
-      count: uniqueArticles.length,
-      domains: Object.keys(domainCounts).length,
-      topMedia: sortedDomains[0]?.[0] || null,
-      topMediaCount: sortedDomains[0]?.[1] || 0,
-      mediaBreakdown,
+      ...fullStats,
+      fromCache: false,
     };
 
-    console.log(`[Press] Result for "${searchTerm}": ${uniqueArticles.length} articles from ${Object.keys(domainCounts).length} domains`);
+    // Save to cache
+    const cacheDuration = getCacheDuration(bucket);
+    await cacheSet(cacheKey, fullResult, cacheDuration);
+    console.log(`[Press] Cached ${uniqueArticles.length} articles for ${searchTerm} (${bucket}d bucket, ${cacheDuration/3600}h TTL)`);
 
-    return NextResponse.json(result, {
-      headers: {
-        "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
-      },
+    // Filter by requested period and recalculate stats for response
+    const filteredArticles = filterArticlesByDays(uniqueArticles, requestedDays);
+    const filteredStats = calculateStats(filteredArticles);
+
+    return NextResponse.json({
+      articles: filteredArticles,
+      ...filteredStats,
+      fromCache: false,
+      bucket,
     });
   } catch (error) {
     console.error("Press API error:", error);
@@ -101,6 +165,7 @@ export async function GET(request: NextRequest) {
         topMedia: null,
         topMediaCount: 0,
         mediaBreakdown: [],
+        fromCache: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }

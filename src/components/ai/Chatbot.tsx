@@ -13,10 +13,12 @@ interface Message {
 interface ChatbotProps {
   context?: {
     candidates?: Record<string, unknown>;
+    periode?: string;
   };
+  period?: number;
 }
 
-export function Chatbot({ context }: ChatbotProps) {
+export function Chatbot({ context, period = 7 }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +49,7 @@ export function Chatbot({ context }: ChatbotProps) {
         body: JSON.stringify({
           question: userMessage,
           context,
+          period,
         }),
       });
 
