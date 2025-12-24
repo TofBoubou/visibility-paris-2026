@@ -2,23 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { cacheGet, cacheSet, buildCacheKey, CACHE_DURATION } from "@/lib/cache";
 
-const THEMES_PROMPT = `Tu analyses des titres d'articles de presse et de vidéos YouTube concernant une personnalité politique.
+const THEMES_PROMPT = `Tu analyses des titres d'articles concernant une personnalité politique.
 
-RÈGLES STRICTES ANTI-HALLUCINATION:
-- Tu ne dois JAMAIS inventer de noms, événements ou faits qui ne sont pas dans les titres
-- Tu ne dois JAMAIS faire de liens de causalité entre des titres indépendants
-- Tu dois rester STRICTEMENT factuel
-- Pas de qualificatifs politiques à charge ("extrême", "radical", etc.)
+RÈGLES:
+- Ne JAMAIS inventer de faits absents des titres
+- Rester STRICTEMENT factuel
+- Pas de qualificatifs politiques
 
-Analyse ces titres et retourne un JSON avec:
-1. "summary": Un résumé factuel de 2-3 phrases (max 300 caractères)
-2. "themes": Une liste de 3-5 thèmes dominants avec:
-   - "theme": Nom court du thème (max 50 car)
-   - "count": Nombre d'articles/vidéos sur ce thème
-   - "tone": "positif", "neutre" ou "négatif"
-   - "examples": 2-3 titres exacts tirés de la liste (max 100 car chacun)
+Pour le TONE de chaque thème, évalue si la COUVERTURE est favorable à la personnalité:
+- "positif": La personnalité agit, propose, dénonce (image valorisante)
+- "neutre": Information factuelle sans jugement
+- "négatif": La personnalité est critiquée ou impliquée dans une polémique
 
-Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.`;
+Retourne un JSON:
+{
+  "summary": "Résumé factuel 2-3 phrases (max 250 car)",
+  "themes": [
+    {
+      "theme": "Nom du thème (max 40 car)",
+      "count": nombre,
+      "tone": "positif" | "neutre" | "négatif",
+      "examples": ["titre exact 1", "titre exact 2"]
+    }
+  ]
+}
+
+JSON uniquement, pas de markdown.`;
 
 interface ThemesResponse {
   summary: string;

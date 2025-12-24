@@ -77,6 +77,9 @@ export async function isKvAvailable(): Promise<boolean> {
   }
 }
 
+// Cache version - increment to invalidate all cache
+const CACHE_VERSION = "v2";
+
 // Build cache keys
 export function buildCacheKey(
   type: "sentiment" | "themes" | "trends" | "youtube",
@@ -84,5 +87,5 @@ export function buildCacheKey(
   period?: number
 ): string {
   const periodSuffix = period ? `:${period}d` : "";
-  return `${type}:${identifier.toLowerCase().replace(/\s+/g, "_")}${periodSuffix}`;
+  return `${CACHE_VERSION}:${type}:${identifier.toLowerCase().replace(/\s+/g, "_")}${periodSuffix}`;
 }

@@ -37,7 +37,7 @@ export const usePeriodStore = create<PeriodState>()(
       },
     }),
     {
-      name: "visibility-period",
+      name: "visibility-period-v2",
     }
   )
 );

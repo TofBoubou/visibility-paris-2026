@@ -1,12 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContextStore, Context } from "@/stores/context";
 import { usePeriodStore, PERIOD_LABELS, Period } from "@/stores/period";
 import { cn } from "@/lib/utils/cn";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, BarChart3 } from "lucide-react";
 
 export function Header() {
   const router = useRouter();
@@ -21,17 +20,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
       <div className="flex h-14 items-center justify-between px-3 md:px-4">
-        {/* Logo - simplified */}
+        {/* Title */}
         <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/logos/Logo SK (tout clair sans 3D sans slogan).svg"
-            alt="Baromètre"
-            width={32}
-            height={32}
-            className="h-8 w-8"
-          />
-          <span className="hidden sm:inline text-sm font-semibold text-gray-900">
-            Baromètre Visibilité
+          <BarChart3 className="w-5 h-5 text-blue-600" />
+          <span className="text-sm font-semibold text-gray-900">
+            Baromètre
           </span>
         </Link>
 

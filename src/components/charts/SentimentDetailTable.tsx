@@ -26,7 +26,7 @@ function formatSentiment(value: number): string {
 
 function getSentimentColorClass(value: number): string {
   if (value > 0.2) return "text-green-600";
-  if (value < -0.2) return "text-blue-600";
+  if (value < -0.2) return "text-red-600";
   return "text-gray-600";
 }
 
@@ -50,14 +50,22 @@ export function SentimentDetailTable({ data }: SentimentDetailTableProps) {
                 <th className="text-center py-3 px-2 font-medium uppercase text-xs text-gray-500">
                   Presse (avg)
                 </th>
-                <th className="text-center py-3 px-2 font-medium uppercase text-xs text-gray-500">
-                  <span className="text-green-600">+</span> / ⚪ / <span className="text-blue-600">-</span>
+                <th className="text-center py-3 px-2 font-medium text-xs">
+                  <span className="text-green-600">+</span>
+                  {" / "}
+                  <span className="text-gray-500">=</span>
+                  {" / "}
+                  <span className="text-red-600">−</span>
                 </th>
                 <th className="text-center py-3 px-2 font-medium uppercase text-xs text-gray-500">
                   YouTube (avg)
                 </th>
-                <th className="text-center py-3 px-2 font-medium uppercase text-xs text-gray-500">
-                  <span className="text-green-600">+</span> / ⚪ / <span className="text-blue-600">-</span>
+                <th className="text-center py-3 px-2 font-medium text-xs">
+                  <span className="text-green-600">+</span>
+                  {" / "}
+                  <span className="text-gray-500">=</span>
+                  {" / "}
+                  <span className="text-red-600">−</span>
                 </th>
                 <th className="text-center py-3 px-2 font-medium uppercase text-xs text-gray-500">
                   Combiné
@@ -89,7 +97,7 @@ export function SentimentDetailTable({ data }: SentimentDetailTableProps) {
                           {" / "}
                           <span className="text-gray-500">{item.pressNeutral}</span>
                           {" / "}
-                          <span className="text-blue-600">{item.pressNegative}</span>
+                          <span className="text-red-600">{item.pressNegative}</span>
                         </span>
                       ) : (
                         "-"
@@ -105,7 +113,7 @@ export function SentimentDetailTable({ data }: SentimentDetailTableProps) {
                           {" / "}
                           <span className="text-gray-500">{item.youtubeNeutral}</span>
                           {" / "}
-                          <span className="text-blue-600">{item.youtubeNegative}</span>
+                          <span className="text-red-600">{item.youtubeNegative}</span>
                         </span>
                       ) : (
                         "-"

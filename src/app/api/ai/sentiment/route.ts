@@ -2,17 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { cacheGet, cacheSet, buildCacheKey, CACHE_DURATION } from "@/lib/cache";
 
-const SENTIMENT_PROMPT = `Tu analyses le sentiment de titres de presse et vidéos concernant une personnalité politique.
+const SENTIMENT_PROMPT = `Tu analyses la COUVERTURE MÉDIATIQUE d'une personnalité politique.
 
-Pour chaque titre, attribue un score de -1 (très négatif) à +1 (très positif).
-- Score proche de -1: critique, scandale, polémique
-- Score proche de 0: neutre, factuel, informatif
-- Score proche de +1: éloge, succès, accomplissement
+IMPORTANT: Tu dois évaluer si le titre présente la personnalité de manière FAVORABLE ou DÉFAVORABLE.
+- Un politicien qui DÉNONCE un problème = couverture POSITIVE (il agit, il s'engage)
+- Un politicien qui PROPOSE des solutions = couverture POSITIVE
+- Un politicien CRITIQUÉ par d'autres = couverture NÉGATIVE
+- Un politicien impliqué dans un SCANDALE = couverture NÉGATIVE
+- Information factuelle sans jugement = NEUTRE
 
-Réponds UNIQUEMENT avec un objet JSON où les clés sont les numéros des titres et les valeurs sont les scores.
-Exemple: {"1": 0.3, "2": -0.5, "3": 0}
+Score de -1 à +1:
+- Score proche de +1: Le titre valorise la personnalité (action, proposition, succès)
+- Score proche de 0: Information neutre, factuelle
+- Score proche de -1: Le titre critique ou nuit à l'image de la personnalité
 
-Pas de markdown, pas d'explication, juste le JSON.`;
+Réponds UNIQUEMENT avec un JSON: {"1": 0.3, "2": -0.5, "3": 0}
+Pas de markdown, pas d'explication.`;
 
 interface SentimentResponse {
   scores: Record<string, number>;

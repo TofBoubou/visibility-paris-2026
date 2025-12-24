@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import {
   BookOpen,
   Newspaper,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
 
 interface CandidateData {
@@ -660,43 +662,16 @@ export default function NationalPage() {
               <CardContent>
                 <div className="space-y-4">
                   {sortedData.map((c) => (
-                    <div
+                    <ExpandablePressCard
                       key={c.id}
-                      className={`p-4 rounded-lg border ${
-                        c.highlighted
-                          ? "border-blue-200 bg-blue-50"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: c.color }}
-                          />
-                          <span className={c.highlighted ? "font-bold text-blue-600" : "font-medium"}>
-                            {c.name}
-                          </span>
-                        </div>
-                        <span className="text-sm text-gray-600">
-                          {c.press.count} articles • {c.press.domains} sources
-                        </span>
-                      </div>
-                      {c.press.topMedia && (
-                        <p className="text-xs text-gray-500">Top média: {c.press.topMedia}</p>
-                      )}
-                      {c.press.articles.slice(0, 3).map((article, i) => (
-                        <a
-                          key={i}
-                          href={article.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block text-sm text-gray-900 hover:text-blue-600 mt-1 truncate"
-                        >
-                          → {article.title}
-                        </a>
-                      ))}
-                    </div>
+                      name={c.name}
+                      color={c.color}
+                      highlighted={c.highlighted}
+                      count={c.press.count}
+                      domains={c.press.domains}
+                      topMedia={c.press.topMedia}
+                      articles={c.press.articles}
+                    />
                   ))}
                 </div>
               </CardContent>
@@ -803,5 +778,81 @@ function MetricCard({ label, value, icon }: MetricCardProps) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+interface ExpandablePressCardProps {
+  name: string;
+  color: string;
+  highlighted?: boolean;
+  count: number;
+  domains: number;
+  topMedia: string | null;
+  articles: Array<{ title: string; url: string; domain: string; date: string }>;
+}
+
+function ExpandablePressCard({
+  name,
+  color,
+  highlighted,
+  count,
+  domains,
+  topMedia,
+  articles,
+}: ExpandablePressCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const displayArticles = expanded ? articles : articles.slice(0, 3);
+
+  return (
+    <div
+      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+        highlighted
+          ? "border-blue-200 bg-blue-50 hover:bg-blue-100"
+          : "border-gray-200 hover:bg-gray-50"
+      }`}
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <span className={highlighted ? "font-bold text-blue-600" : "font-medium"}>
+            {name}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">
+            {count} articles • {domains} sources
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-gray-400 transition-transform ${
+              expanded ? "rotate-180" : ""
+            }`}
+          />
+        </div>
+      </div>
+      {topMedia && (
+        <p className="text-xs text-gray-500 mb-2">Top média: {topMedia}</p>
+      )}
+      {displayArticles.map((article, i) => (
+        <a
+          key={i}
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-sm text-gray-900 hover:text-blue-600 mt-1 truncate"
+          onClick={(e) => e.stopPropagation()}
+        >
+          → {article.title}
+        </a>
+      ))}
+      {!expanded && articles.length > 3 && (
+        <p className="text-xs text-blue-600 mt-2">
+          + {articles.length - 3} autres articles
+        </p>
+      )}
+    </div>
   );
 }
