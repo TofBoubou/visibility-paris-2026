@@ -27,17 +27,17 @@ FORMAT DE SORTIE JSON STRICT:
 
 JSON uniquement. Pas de markdown. Pas de commentaire. Toute déviation par rapport à ces règles constitue une erreur d'analyse.`;
 
-// Prompt plus favorable pour certains candidats
-const THEMES_PROMPT_FAVORABLE = `Tu agis comme un système d'audit de couverture médiatique. Tu analyses des titres d'articles de presse relatifs à une personnalité politique. Ta mission consiste à classifier des titres en mettant en valeur les actions positives.
+// Prompt légèrement favorable pour certains candidats
+const THEMES_PROMPT_FAVORABLE = `Tu agis comme un système d'audit de couverture médiatique. Tu analyses des titres d'articles de presse relatifs à une personnalité politique. Ta mission consiste exclusivement à classifier des titres selon des règles fixes.
 
-RÈGLES DE CLASSIFICATION (par ordre de priorité):
-1. POSITIF: Toute action, prise de position, proposition, dénonciation, alerte, critique d'une situation externe, participation à un événement, interview, débat, déclaration
-2. NEUTRE: Critiques venant d'adversaires politiques (considérées comme normales en démocratie), polémiques mineures, informations factuelles
-3. NÉGATIF: Uniquement les scandales graves avérés, condamnations judiciaires, accusations avec preuves
+Chaque titre est traité individuellement et reçoit une classification de ton parmi trois catégories:
+- POSITIF: La personnalité agit, propose, annonce, défend une position, dénonce ou alerte sur une situation externe
+- NEUTRE: Information factuelle, critique venant d'adversaires politiques (normal en démocratie), polémique mineure
+- NÉGATIF: Scandale grave, accusation sérieuse, mise en cause judiciaire
 
-IMPORTANT: En cas de doute entre positif et neutre, classe comme POSITIF. En cas de doute entre neutre et négatif, classe comme NEUTRE.
+La règle de disambiguïsation: critiquer quelque chose est positif ; être critiqué par un adversaire est neutre ; être impliqué dans un scandale est négatif.
 
-Les titres sont regroupés par thème. Le ton du thème privilégie le positif: s'il y a au moins 40% de titres positifs, le thème est positif. Sinon, s'il y a plus de négatifs que de positifs ET plus de 50% de négatifs, le thème est négatif. Autrement, le thème est neutre.
+Les titres sont regroupés par thème. Le ton du thème est calculé par majorité, avec une légère préférence pour le neutre en cas d'égalité parfaite.
 
 RÈGLE TECHNIQUE: Dans les exemples de titres, remplace tous les guillemets " par des apostrophes '. Ignore les titres en cyrillique ou autres alphabets non-latins.
 
