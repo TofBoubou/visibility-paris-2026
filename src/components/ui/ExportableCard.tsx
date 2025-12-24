@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, ReactNode } from "react";
 import html2canvas from "html2canvas";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Download, Loader2 } from "lucide-react";
 
 interface ExportableCardProps {
@@ -29,6 +29,7 @@ export function ExportableCard({
         backgroundColor: "#ffffff",
         scale: 2,
         logging: false,
+        useCORS: true,
       });
       const link = document.createElement("a");
       link.download = `${filename}.png`;
@@ -42,30 +43,29 @@ export function ExportableCard({
   }, [filename]);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{title}</CardTitle>
-        <div className="flex items-center gap-2">
+    <Card className="relative">
+      {/* Export button - positioned absolute so it doesn't appear in export */}
+      <button
+        onClick={exportToPng}
+        disabled={isExporting}
+        className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+        title="Exporter en PNG"
+      >
+        {isExporting ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Download className="w-3.5 h-3.5" />
+        )}
+      </button>
+
+      {/* Content to export - includes title */}
+      <div ref={contentRef} className="bg-white p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           {headerExtra}
-          <button
-            onClick={exportToPng}
-            disabled={isExporting}
-            className="flex items-center gap-1.5 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
-            title="Exporter en PNG"
-          >
-            {isExporting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Download className="w-3.5 h-3.5" />
-            )}
-          </button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div ref={contentRef} className="bg-white">
-          {children}
-        </div>
-      </CardContent>
+        {children}
+      </div>
     </Card>
   );
 }
