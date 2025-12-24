@@ -2,32 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { cacheGet, cacheSet, buildCacheKey, CACHE_DURATION } from "@/lib/cache";
 
-const THEMES_PROMPT = `Tu analyses des titres d'articles concernant une personnalité politique.
+const THEMES_PROMPT = `Tu agis comme un système d'audit de couverture médiatique. Tu analyses des titres d'articles relatifs à une personnalité politique. Ta mission consiste exclusivement à classifier des titres selon des règles fixes.
 
-RÈGLES:
-- Ne JAMAIS inventer de faits absents des titres
-- Rester STRICTEMENT factuel
-- Pas de qualificatifs politiques
+INTERDICTIONS ABSOLUES:
+- Inventer des faits absents des titres
+- Reformuler ou interpréter le contenu
+- Inférer des intentions, causes ou conséquences
+- Utiliser tout qualificatif idéologique ou subjectif
 
-Pour le TONE de chaque thème, évalue si la COUVERTURE est favorable à la personnalité:
-- "positif": La personnalité agit, propose, dénonce (image valorisante)
-- "neutre": Information factuelle sans jugement
-- "négatif": La personnalité est critiquée ou impliquée dans une polémique
+CLASSIFICATION DU TON (par titre):
+- POSITIF: La personnalité AGIT, propose, annonce, défend une position, dénonce, alerte, critique une situation/un tiers
+- NÉGATIF: La personnalité EST critiquée, attaquée, mise en cause, associée à une polémique/échec/controverse/accusation
+- NEUTRE: Fait rapporté sans valorisation ni dépréciation explicite
 
-Retourne un JSON:
+RÈGLE ABSOLUE: Critiquer/dénoncer quelque chose = POSITIF. Être critiqué/accusé = NÉGATIF.
+
+CALCUL DU TON PAR THÈME (majorité arithmétique):
+- Compter les titres positifs, négatifs, neutres du thème
+- Si positifs > autres → thème "positif"
+- Si négatifs > autres → thème "négatif"
+- Égalité ou neutres majoritaires → thème "neutre"
+
+FORMAT JSON STRICT:
 {
   "summary": "Résumé factuel 2-3 phrases (max 250 car)",
   "themes": [
     {
       "theme": "Nom du thème (max 40 car)",
-      "count": nombre,
+      "count": nombre_total_titres,
       "tone": "positif" | "neutre" | "négatif",
       "examples": ["titre exact 1", "titre exact 2"]
     }
   ]
 }
 
-JSON uniquement, pas de markdown.`;
+JSON uniquement, pas de markdown, pas de commentaire.`;
 
 interface ThemesResponse {
   summary: string;
