@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import html2canvas from "html2canvas";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExportableCard } from "@/components/ui/ExportableCard";
 import { useCandidatesStore } from "@/stores/candidates";
 import { usePeriodStore, PERIOD_DAYS } from "@/stores/period";
 import { PARIS_CANDIDATES } from "@/lib/candidates/paris";
@@ -567,39 +568,29 @@ export default function ParisPage() {
 
               {/* Charts */}
               <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Score global</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScoreBarChart
-                      data={sortedData.map((c) => ({
-                        name: c.name,
-                        score: c.score.total,
-                        color: c.color,
-                        highlighted: c.highlighted,
-                      }))}
-                      height={Math.max(250, sortedData.length * 40)}
-                    />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Décomposition</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScoreBreakdownChart
-                      data={sortedData.map((c) => ({
-                        name: c.name,
-                        trends: c.score.contributions.trends,
-                        press: c.score.contributions.press,
-                        wikipedia: c.score.contributions.wikipedia,
-                        youtube: c.score.contributions.youtube,
-                      }))}
-                      height={Math.max(250, sortedData.length * 40)}
-                    />
-                  </CardContent>
-                </Card>
+                <ExportableCard title="Score global" filename={`paris-score-global-${period}`}>
+                  <ScoreBarChart
+                    data={sortedData.map((c) => ({
+                      name: c.name,
+                      score: c.score.total,
+                      color: c.color,
+                      highlighted: c.highlighted,
+                    }))}
+                    height={Math.max(250, sortedData.length * 40)}
+                  />
+                </ExportableCard>
+                <ExportableCard title="Décomposition" filename={`paris-decomposition-${period}`}>
+                  <ScoreBreakdownChart
+                    data={sortedData.map((c) => ({
+                      name: c.name,
+                      trends: c.score.contributions.trends,
+                      press: c.score.contributions.press,
+                      wikipedia: c.score.contributions.wikipedia,
+                      youtube: c.score.contributions.youtube,
+                    }))}
+                    height={Math.max(250, sortedData.length * 40)}
+                  />
+                </ExportableCard>
               </div>
             </div>
           </TabsContent>
@@ -608,96 +599,76 @@ export default function ParisPage() {
             <div className="space-y-6">
               {/* Row 1: Bar charts */}
               <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Vues totales</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <YouTubeChart
-                      data={sortedData.map((c) => ({
-                        name: c.name,
-                        totalViews: c.youtube.totalViews,
-                        shortsViews: c.youtube.shortsViews,
-                        longViews: c.youtube.longViews,
-                        color: c.color,
-                        highlighted: c.highlighted,
-                      }))}
-                      variant="total"
-                      height={Math.max(250, sortedData.length * 40)}
-                    />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Shorts vs Vidéos longues</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <YouTubeChart
-                      data={sortedData.map((c) => ({
-                        name: c.name,
-                        totalViews: c.youtube.totalViews,
-                        shortsViews: c.youtube.shortsViews,
-                        longViews: c.youtube.longViews,
-                        color: c.color,
-                        highlighted: c.highlighted,
-                      }))}
-                      variant="breakdown"
-                      height={Math.max(250, sortedData.length * 40)}
-                    />
-                  </CardContent>
-                </Card>
+                <ExportableCard title="Vues totales" filename={`paris-youtube-vues-${period}`}>
+                  <YouTubeChart
+                    data={sortedData.map((c) => ({
+                      name: c.name,
+                      totalViews: c.youtube.totalViews,
+                      shortsViews: c.youtube.shortsViews,
+                      longViews: c.youtube.longViews,
+                      color: c.color,
+                      highlighted: c.highlighted,
+                    }))}
+                    variant="total"
+                    height={Math.max(250, sortedData.length * 40)}
+                  />
+                </ExportableCard>
+                <ExportableCard title="Shorts vs Vidéos longues" filename={`paris-youtube-breakdown-${period}`}>
+                  <YouTubeChart
+                    data={sortedData.map((c) => ({
+                      name: c.name,
+                      totalViews: c.youtube.totalViews,
+                      shortsViews: c.youtube.shortsViews,
+                      longViews: c.youtube.longViews,
+                      color: c.color,
+                      highlighted: c.highlighted,
+                    }))}
+                    variant="breakdown"
+                    height={Math.max(250, sortedData.length * 40)}
+                  />
+                </ExportableCard>
               </div>
 
               {/* Row 2: Scatter plots - Viralité */}
               <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Vues vs Taux de likes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <YouTubeScatterChart
-                      data={sortedData.map((c) => ({
-                        name: c.name,
-                        color: c.color,
-                        highlighted: c.highlighted,
-                        shortsViews: c.youtube.shortsViews,
-                        shortsLikes: c.youtube.shortsLikes,
-                        shortsComments: c.youtube.shortsComments,
-                        shortsCount: c.youtube.shortsCount,
-                        longViews: c.youtube.longViews,
-                        longLikes: c.youtube.longLikes,
-                        longComments: c.youtube.longComments,
-                        longCount: c.youtube.longCount,
-                      }))}
-                      variant="likes"
-                      height={350}
-                    />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Vues vs Taux de commentaires</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <YouTubeScatterChart
-                      data={sortedData.map((c) => ({
-                        name: c.name,
-                        color: c.color,
-                        highlighted: c.highlighted,
-                        shortsViews: c.youtube.shortsViews,
-                        shortsLikes: c.youtube.shortsLikes,
-                        shortsComments: c.youtube.shortsComments,
-                        shortsCount: c.youtube.shortsCount,
-                        longViews: c.youtube.longViews,
-                        longLikes: c.youtube.longLikes,
-                        longComments: c.youtube.longComments,
-                        longCount: c.youtube.longCount,
-                      }))}
-                      variant="comments"
-                      height={350}
-                    />
-                  </CardContent>
-                </Card>
+                <ExportableCard title="Vues vs Taux de likes" filename={`paris-youtube-likes-${period}`}>
+                  <YouTubeScatterChart
+                    data={sortedData.map((c) => ({
+                      name: c.name,
+                      color: c.color,
+                      highlighted: c.highlighted,
+                      shortsViews: c.youtube.shortsViews,
+                      shortsLikes: c.youtube.shortsLikes,
+                      shortsComments: c.youtube.shortsComments,
+                      shortsCount: c.youtube.shortsCount,
+                      longViews: c.youtube.longViews,
+                      longLikes: c.youtube.longLikes,
+                      longComments: c.youtube.longComments,
+                      longCount: c.youtube.longCount,
+                    }))}
+                    variant="likes"
+                    height={350}
+                  />
+                </ExportableCard>
+                <ExportableCard title="Vues vs Taux de commentaires" filename={`paris-youtube-comments-${period}`}>
+                  <YouTubeScatterChart
+                    data={sortedData.map((c) => ({
+                      name: c.name,
+                      color: c.color,
+                      highlighted: c.highlighted,
+                      shortsViews: c.youtube.shortsViews,
+                      shortsLikes: c.youtube.shortsLikes,
+                      shortsComments: c.youtube.shortsComments,
+                      shortsCount: c.youtube.shortsCount,
+                      longViews: c.youtube.longViews,
+                      longLikes: c.youtube.longLikes,
+                      longComments: c.youtube.longComments,
+                      longCount: c.youtube.longCount,
+                    }))}
+                    variant="comments"
+                    height={350}
+                  />
+                </ExportableCard>
               </div>
             </div>
           </TabsContent>
@@ -710,21 +681,16 @@ export default function ParisPage() {
               </div>
             ) : themesData ? (
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Vue d&apos;ensemble</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ThemesOverview
-                      data={themesData.map((t) => ({
-                        candidateName: t.candidateName,
-                        themes: t.themes,
-                        highlighted: sortedData.find((c) => c.name === t.candidateName)
-                          ?.highlighted,
-                      }))}
-                    />
-                  </CardContent>
-                </Card>
+                <ExportableCard title="Vue d'ensemble" filename={`paris-themes-overview-${period}`}>
+                  <ThemesOverview
+                    data={themesData.map((t) => ({
+                      candidateName: t.candidateName,
+                      themes: t.themes,
+                      highlighted: sortedData.find((c) => c.name === t.candidateName)
+                        ?.highlighted,
+                    }))}
+                  />
+                </ExportableCard>
                 <div className="grid md:grid-cols-2 gap-6">
                   {[...themesData]
                     .sort((a, b) => {
@@ -763,27 +729,22 @@ export default function ParisPage() {
               </div>
             ) : sentimentData ? (
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Baromètre du sentiment</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SentimentChart
-                      data={sentimentData.map((s) => ({
-                        name: s.name,
-                        sentiment: s.combinedAvg,
-                        color:
-                          sortedData?.find((c) => c.name === s.name)?.color || "#22496A",
-                        highlighted: sortedData?.find((c) => c.name === s.name)?.highlighted,
-                      }))}
-                      height={Math.max(250, sentimentData.length * 40)}
-                    />
-                    <p className="text-xs text-gray-500 mt-4 text-center">
-                      Score de -1 (très négatif) à +1 (très positif), basé sur l&apos;analyse IA
-                      des titres d&apos;articles
-                    </p>
-                  </CardContent>
-                </Card>
+                <ExportableCard title="Baromètre du sentiment" filename={`paris-sentiment-${period}`}>
+                  <SentimentChart
+                    data={sentimentData.map((s) => ({
+                      name: s.name,
+                      sentiment: s.combinedAvg,
+                      color:
+                        sortedData?.find((c) => c.name === s.name)?.color || "#22496A",
+                      highlighted: sortedData?.find((c) => c.name === s.name)?.highlighted,
+                    }))}
+                    height={Math.max(250, sentimentData.length * 40)}
+                  />
+                  <p className="text-xs text-gray-500 mt-4 text-center">
+                    Score de -1 (très négatif) à +1 (très positif), basé sur l&apos;analyse IA
+                    des titres d&apos;articles
+                  </p>
+                </ExportableCard>
 
                 <SentimentDetailTable
                   data={sentimentData.map((s) => ({
@@ -812,67 +773,52 @@ export default function ParisPage() {
 
           <TabsContent value="wikipedia">
             <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Vues Wikipedia</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <WikipediaChart
-                    data={sortedData.map((c) => ({
-                      name: c.name,
-                      views: c.wikipedia.views,
-                      variation: c.wikipedia.variation,
-                      color: c.color,
-                      highlighted: c.highlighted,
-                    }))}
-                    variant="views"
-                    height={Math.max(250, sortedData.length * 40)}
-                  />
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Variation vs période précédente</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <WikipediaChart
-                    data={sortedData.map((c) => ({
-                      name: c.name,
-                      views: c.wikipedia.views,
-                      variation: c.wikipedia.variation,
-                      color: c.color,
-                      highlighted: c.highlighted,
-                    }))}
-                    variant="variation"
-                    height={Math.max(250, sortedData.length * 40)}
-                  />
-                </CardContent>
-              </Card>
+              <ExportableCard title="Vues Wikipedia" filename={`paris-wikipedia-vues-${period}`}>
+                <WikipediaChart
+                  data={sortedData.map((c) => ({
+                    name: c.name,
+                    views: c.wikipedia.views,
+                    variation: c.wikipedia.variation,
+                    color: c.color,
+                    highlighted: c.highlighted,
+                  }))}
+                  variant="views"
+                  height={Math.max(250, sortedData.length * 40)}
+                />
+              </ExportableCard>
+              <ExportableCard title="Variation vs période précédente" filename={`paris-wikipedia-variation-${period}`}>
+                <WikipediaChart
+                  data={sortedData.map((c) => ({
+                    name: c.name,
+                    views: c.wikipedia.views,
+                    variation: c.wikipedia.variation,
+                    color: c.color,
+                    highlighted: c.highlighted,
+                  }))}
+                  variant="variation"
+                  height={Math.max(250, sortedData.length * 40)}
+                />
+              </ExportableCard>
             </div>
           </TabsContent>
 
           <TabsContent value="presse">
-            <Card>
-              <CardHeader>
-                <CardTitle>Articles de presse</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {sortedData.map((c) => (
-                    <ExpandablePressCard
-                      key={c.id}
-                      name={c.name}
-                      color={c.color}
-                      highlighted={c.highlighted}
-                      count={c.press.count}
-                      domains={c.press.domains}
-                      topMedia={c.press.topMedia}
-                      articles={c.press.articles}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <ExportableCard title="Articles de presse" filename={`paris-presse-${period}`}>
+              <div className="space-y-3">
+                {sortedData.map((c) => (
+                  <ExpandablePressCard
+                    key={c.id}
+                    name={c.name}
+                    color={c.color}
+                    highlighted={c.highlighted}
+                    count={c.press.count}
+                    domains={c.press.domains}
+                    topMedia={c.press.topMedia}
+                    articles={c.press.articles}
+                  />
+                ))}
+              </div>
+            </ExportableCard>
           </TabsContent>
 
           <TabsContent value="sondages">
