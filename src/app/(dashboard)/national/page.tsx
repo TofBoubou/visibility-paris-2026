@@ -160,7 +160,7 @@ export default function NationalPage() {
     queryFn: async () => {
       if (!candidatesData || candidatesData.length === 0) return null;
       const results = await Promise.all(
-        candidatesData.slice(0, 8).map(async (c) => {
+        candidatesData.map(async (c) => {
           const titles = c.press.articles.slice(0, 15).map((a) => a.title);
           if (titles.length === 0) {
             return {
@@ -199,7 +199,7 @@ export default function NationalPage() {
     queryFn: async () => {
       if (!candidatesData || candidatesData.length === 0) return null;
       const results = await Promise.all(
-        candidatesData.slice(0, 5).map(async (c) => {
+        candidatesData.map(async (c) => {
           const titles = c.press.articles.slice(0, 15).map((a) => a.title);
           if (titles.length === 0) return { candidateName: c.name, themes: [], summary: "" };
           const res = await fetch("/api/ai/themes", {
