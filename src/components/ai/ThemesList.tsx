@@ -131,6 +131,13 @@ interface ThemesOverviewProps {
 }
 
 export function ThemesOverview({ data }: ThemesOverviewProps) {
+  // Sort to put highlighted candidate (Knafo) first
+  const sortedData = [...data].sort((a, b) => {
+    if (a.highlighted && !b.highlighted) return -1;
+    if (!a.highlighted && b.highlighted) return 1;
+    return 0;
+  });
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -145,7 +152,7 @@ export function ThemesOverview({ data }: ThemesOverviewProps) {
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
+          {sortedData.map((item, index) => (
             <tr
               key={index}
               className={`border-b border-gray-100 ${
