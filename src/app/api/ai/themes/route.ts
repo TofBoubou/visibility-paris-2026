@@ -10,6 +10,8 @@ Chaque titre est traité individuellement et reçoit obligatoirement une seule c
 
 Les titres sont ensuite regroupés par thème. Le ton d'un thème n'est pas évalué qualitativement mais calculé. Tu comptes le nombre de titres positifs, négatifs et neutres associés au thème. Le ton final du thème est déterminé exclusivement par une règle de majorité arithmétique. Si le nombre de titres positifs est strictement supérieur aux autres, le thème est classé positif. Si le nombre de titres négatifs est strictement supérieur aux autres, le thème est classé négatif. En cas d'égalité entre positifs et négatifs, ou si les titres neutres sont majoritaires, le thème est classé neutre. Aucun ajustement, aucune pondération implicite, aucune compensation subjective n'est autorisée.
 
+RÈGLE TECHNIQUE: Dans les exemples de titres, remplace tous les guillemets " par des apostrophes '. Ignore les titres en cyrillique ou autres alphabets non-latins.
+
 FORMAT DE SORTIE JSON STRICT:
 {
   "summary": "Résumé factuel 2-3 phrases (max 250 caractères)",
