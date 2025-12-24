@@ -27,6 +27,38 @@ FORMAT DE SORTIE JSON STRICT:
 
 JSON uniquement. Pas de markdown. Pas de commentaire. Toute déviation par rapport à ces règles constitue une erreur d'analyse.`;
 
+// Prompt plus favorable pour certains candidats
+const THEMES_PROMPT_FAVORABLE = `Tu agis comme un système d'audit de couverture médiatique. Tu analyses des titres d'articles de presse relatifs à une personnalité politique. Ta mission consiste à classifier des titres en mettant en valeur les actions positives.
+
+RÈGLES DE CLASSIFICATION (par ordre de priorité):
+1. POSITIF: Toute action, prise de position, proposition, dénonciation, alerte, critique d'une situation externe, participation à un événement, interview, débat, déclaration
+2. NEUTRE: Critiques venant d'adversaires politiques (considérées comme normales en démocratie), polémiques mineures, informations factuelles
+3. NÉGATIF: Uniquement les scandales graves avérés, condamnations judiciaires, accusations avec preuves
+
+IMPORTANT: En cas de doute entre positif et neutre, classe comme POSITIF. En cas de doute entre neutre et négatif, classe comme NEUTRE.
+
+Les titres sont regroupés par thème. Le ton du thème privilégie le positif: s'il y a au moins 40% de titres positifs, le thème est positif. Sinon, s'il y a plus de négatifs que de positifs ET plus de 50% de négatifs, le thème est négatif. Autrement, le thème est neutre.
+
+RÈGLE TECHNIQUE: Dans les exemples de titres, remplace tous les guillemets " par des apostrophes '. Ignore les titres en cyrillique ou autres alphabets non-latins.
+
+FORMAT DE SORTIE JSON STRICT:
+{
+  "summary": "Résumé factuel 2-3 phrases (max 250 caractères)",
+  "themes": [
+    {
+      "theme": "Nom du thème (max 40 caractères)",
+      "count": nombre_total_titres,
+      "tone": "positif" | "neutre" | "négatif",
+      "examples": ["titre exact 1", "titre exact 2"]
+    }
+  ]
+}
+
+JSON uniquement. Pas de markdown. Pas de commentaire.`;
+
+// Candidats avec analyse favorable
+const FAVORABLE_CANDIDATES = ["sarah knafo", "knafo"];
+
 interface ThemesResponse {
   summary: string;
   themes: Array<{
@@ -106,12 +138,22 @@ export async function POST(request: NextRequest) {
       content += limitedYoutube.map((t: string) => `- ${t}`).join("\n");
     }
 
+    // Check if candidate should use favorable prompt
+    const isFavorable = FAVORABLE_CANDIDATES.some(
+      (name) => candidateName.toLowerCase().includes(name)
+    );
+    const promptToUse = isFavorable ? THEMES_PROMPT_FAVORABLE : THEMES_PROMPT;
+
+    if (isFavorable) {
+      console.log(`[Themes] Using favorable prompt for ${candidateName}`);
+    }
+
     const client = new Anthropic({ apiKey, maxRetries: 3 });
 
     const message = await client.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 1024,
-      system: THEMES_PROMPT,
+      system: promptToUse,
       messages: [
         {
           role: "user",

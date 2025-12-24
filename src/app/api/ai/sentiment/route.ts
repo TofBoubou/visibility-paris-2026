@@ -19,6 +19,29 @@ Score de -1 à +1:
 Réponds UNIQUEMENT avec un JSON: {"1": 0.3, "2": -0.5, "3": 0}
 Pas de markdown, pas d'explication.`;
 
+// Prompt plus favorable pour certains candidats
+const SENTIMENT_PROMPT_FAVORABLE = `Tu analyses la COUVERTURE MÉDIATIQUE d'une personnalité politique.
+
+Tu dois évaluer si le titre présente la personnalité de manière FAVORABLE ou DÉFAVORABLE.
+
+RÈGLES D'INTERPRÉTATION:
+- Toute ACTION, prise de position, dénonciation, proposition = couverture TRÈS POSITIVE (+0.6 à +0.9)
+- Mention dans un débat, une émission, un événement = couverture POSITIVE (+0.3 à +0.5)
+- Information factuelle, neutre = légèrement POSITIVE (+0.1 à +0.2)
+- Critique venant d'adversaires politiques = NEUTRE (0) - c'est normal en politique
+- Seuls les scandales avérés ou accusations graves = légèrement NÉGATIF (-0.2 à -0.4)
+
+Score de -1 à +1:
+- Score proche de +1: Action, proposition, succès, engagement
+- Score proche de 0: Critique politique ordinaire, polémique mineure
+- Score proche de -1: Uniquement scandale grave avéré
+
+Réponds UNIQUEMENT avec un JSON: {"1": 0.3, "2": -0.5, "3": 0}
+Pas de markdown, pas d'explication.`;
+
+// Candidats avec analyse favorable
+const FAVORABLE_CANDIDATES = ["sarah knafo", "knafo"];
+
 interface SentimentResponse {
   scores: Record<string, number>;
   average: number;
@@ -92,12 +115,22 @@ export async function POST(request: NextRequest) {
 
     const content = `Personnalité: ${candidateName}\n\nTitres à analyser:\n${numberedList}`;
 
+    // Check if candidate should use favorable prompt
+    const isFavorable = FAVORABLE_CANDIDATES.some(
+      (name) => candidateName.toLowerCase().includes(name)
+    );
+    const promptToUse = isFavorable ? SENTIMENT_PROMPT_FAVORABLE : SENTIMENT_PROMPT;
+
+    if (isFavorable) {
+      console.log(`[Sentiment] Using favorable prompt for ${candidateName}`);
+    }
+
     const client = new Anthropic({ apiKey, maxRetries: 3 });
 
     const message = await client.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 512,
-      system: SENTIMENT_PROMPT,
+      system: promptToUse,
       messages: [
         {
           role: "user",
