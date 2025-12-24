@@ -189,10 +189,7 @@ export async function POST(request: NextRequest) {
         const batchScores = await analyzeBatch(client, candidateName, batches[i], promptToUse, i);
         Object.assign(allScores, batchScores);
 
-        // Add delay between batches (except after last one)
-        if (i < batches.length - 1) {
-          await delay(500); // 500ms delay between batches
-        }
+        // No delay - process batches immediately
       } catch (batchError) {
         console.error(`[Sentiment] Batch ${i + 1} failed:`, batchError);
         // Continue with other batches even if one fails
