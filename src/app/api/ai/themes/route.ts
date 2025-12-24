@@ -31,13 +31,13 @@ JSON uniquement. Pas de markdown. Pas de commentaire. Toute déviation par rappo
 const THEMES_PROMPT_FAVORABLE = `Tu agis comme un système d'audit de couverture médiatique. Tu analyses des titres d'articles de presse relatifs à une personnalité politique. Ta mission consiste exclusivement à classifier des titres selon des règles fixes.
 
 Chaque titre est traité individuellement et reçoit une classification de ton parmi trois catégories:
-- POSITIF: La personnalité agit, propose, annonce, défend une position, dénonce, alerte, participe à un débat/émission, est mentionnée positivement ou factuellement
-- NEUTRE: Critique venant d'adversaires politiques (normal en démocratie), polémique mineure
-- NÉGATIF: Uniquement scandale grave avéré, mise en cause judiciaire avec preuves
+- POSITIF: La personnalité agit, propose, annonce, défend une position, dénonce ou alerte sur une situation externe
+- NEUTRE: Information factuelle, critique venant d'adversaires politiques (normal en démocratie), polémique mineure, mention dans un débat/émission
+- NÉGATIF: Scandale grave avéré, mise en cause judiciaire avec preuves
 
-La règle de disambiguïsation: critiquer quelque chose est positif ; être mentionné est positif ; être critiqué par un adversaire est neutre ; seul un scandale grave est négatif.
+La règle de disambiguïsation: critiquer quelque chose est positif ; être critiqué par un adversaire est neutre ; être impliqué dans un scandale est négatif.
 
-Les titres sont regroupés par thème. Le ton du thème est calculé par majorité, avec une préférence pour le positif en cas d'égalité.
+Les titres sont regroupés par thème. Le ton du thème est calculé par majorité, avec une légère préférence pour le neutre en cas d'égalité parfaite entre positif et négatif.
 
 RÈGLE TECHNIQUE: Dans les exemples de titres, remplace tous les guillemets " par des apostrophes '. Ignore les titres en cyrillique ou autres alphabets non-latins.
 
