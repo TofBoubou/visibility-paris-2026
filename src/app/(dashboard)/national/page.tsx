@@ -163,8 +163,8 @@ export default function NationalPage() {
       if (!candidatesData || candidatesData.length === 0) return null;
       const results = await Promise.all(
         candidatesData.map(async (c) => {
-          const pressTitles = c.press.articles.slice(0, 15).map((a) => a.title);
-          const youtubeTitles = c.youtube.videos.slice(0, 15).map((v) => v.title);
+          const pressTitles = c.press.articles.slice(0, 50).map((a) => a.title);
+          const youtubeTitles = c.youtube.videos.slice(0, 50).map((v) => v.title);
 
           // Fetch press sentiment
           let pressData = { average: 0, positive: 0, neutral: 0, negative: 0, total: 0 };
