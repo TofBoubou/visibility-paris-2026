@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -29,37 +30,64 @@ function getSentimentColor(value: number): string {
   return "#22496A80"; // Gray - neutral
 }
 
+function truncateName(name: string, maxLength: number): string {
+  if (name.length <= maxLength) return name;
+  return name.substring(0, maxLength - 1) + "…";
+}
+
 export function SentimentChart({ data, height = 300 }: SentimentChartProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   // Sort by sentiment descending
   const sortedData = [...data].sort((a, b) => b.sentiment - a.sentiment);
+
+  // Responsive values
+  const yAxisWidth = isMobile ? 70 : 95;
+  const leftMargin = isMobile ? 75 : 100;
+  const rightMargin = isMobile ? 15 : 30;
+  const fontSize = isMobile ? 10 : 12;
+  const maxNameLength = isMobile ? 10 : 20;
+
+  // Prepare data with truncated names for display
+  const displayData = sortedData.map((item) => ({
+    ...item,
+    displayName: truncateName(item.name, maxNameLength),
+  }));
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
-        data={sortedData}
+        data={displayData}
         layout="vertical"
-        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+        margin={{ top: 5, right: rightMargin, left: leftMargin, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#22496A20" />
         <XAxis
           type="number"
           domain={[-1, 1]}
-          tick={{ fill: "#22496A", fontSize: 12 }}
+          tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
-          ticks={[-1, -0.5, 0, 0.5, 1]}
+          ticks={isMobile ? [-1, 0, 1] : [-1, -0.5, 0, 0.5, 1]}
         />
         <YAxis
           type="category"
-          dataKey="name"
-          tick={{ fill: "#22496A", fontSize: 12 }}
+          dataKey="displayName"
+          tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
-          width={95}
+          width={yAxisWidth}
         />
         <ReferenceLine x={0} stroke="#22496A" strokeWidth={2} />
         <Tooltip
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
-              const item = payload[0].payload as SentimentData;
+              const item = payload[0].payload as SentimentData & { displayName: string };
               const label =
                 item.sentiment > 0.2
                   ? "Positif"
@@ -80,7 +108,7 @@ export function SentimentChart({ data, height = 300 }: SentimentChartProps) {
           }}
         />
         <Bar dataKey="sentiment" radius={4}>
-          {sortedData.map((entry, index) => (
+          {displayData.map((entry, index) => (
             <Cell
               key={`cell-${index}`}
               fill={getSentimentColor(entry.sentiment)}

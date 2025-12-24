@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -37,39 +38,66 @@ function getVariationColor(value: number): string {
   return "#22496A80"; // Gray - neutral
 }
 
+function truncateName(name: string, maxLength: number): string {
+  if (name.length <= maxLength) return name;
+  return name.substring(0, maxLength - 1) + "…";
+}
+
 export function WikipediaChart({
   data,
   height = 300,
   variant = "views",
 }: WikipediaChartProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Responsive values
+  const yAxisWidth = isMobile ? 70 : 95;
+  const leftMargin = isMobile ? 75 : 100;
+  const rightMargin = isMobile ? 15 : 30;
+  const fontSize = isMobile ? 10 : 12;
+  const maxNameLength = isMobile ? 10 : 20;
+
   // Sort appropriately
   const sortedData =
     variant === "views"
       ? [...data].sort((a, b) => b.views - a.views)
       : [...data].sort((a, b) => b.variation - a.variation);
 
+  // Prepare data with truncated names for display
+  const displayData = sortedData.map((item) => ({
+    ...item,
+    displayName: truncateName(item.name, maxNameLength),
+  }));
+
   if (variant === "variation") {
     return (
       <ResponsiveContainer width="100%" height={height}>
         <BarChart
-          data={sortedData}
+          data={displayData}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+          margin={{ top: 5, right: rightMargin, left: leftMargin, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#22496A20" />
           <XAxis
             type="number"
             domain={[-100, 100]}
-            tick={{ fill: "#22496A", fontSize: 12 }}
+            tick={{ fill: "#22496A", fontSize }}
             tickLine={{ stroke: "#22496A40" }}
             tickFormatter={(v) => `${v > 0 ? "+" : ""}${v}%`}
           />
           <YAxis
             type="category"
-            dataKey="name"
-            tick={{ fill: "#22496A", fontSize: 12 }}
+            dataKey="displayName"
+            tick={{ fill: "#22496A", fontSize }}
             tickLine={{ stroke: "#22496A40" }}
-            width={95}
+            width={yAxisWidth}
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -90,7 +118,7 @@ export function WikipediaChart({
             }}
           />
           <Bar dataKey="variation" radius={4}>
-            {sortedData.map((entry, index) => (
+            {displayData.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={getVariationColor(entry.variation)}
@@ -105,23 +133,23 @@ export function WikipediaChart({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
-        data={sortedData}
+        data={displayData}
         layout="vertical"
-        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+        margin={{ top: 5, right: rightMargin, left: leftMargin, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#22496A20" />
         <XAxis
           type="number"
-          tick={{ fill: "#22496A", fontSize: 12 }}
+          tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
           tickFormatter={formatViews}
         />
         <YAxis
           type="category"
-          dataKey="name"
-          tick={{ fill: "#22496A", fontSize: 12 }}
+          dataKey="displayName"
+          tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
-          width={95}
+          width={yAxisWidth}
         />
         <Tooltip
           content={({ active, payload }) => {
@@ -140,7 +168,7 @@ export function WikipediaChart({
           }}
         />
         <Bar dataKey="views" radius={[0, 4, 4, 0]}>
-          {sortedData.map((entry, index) => (
+          {displayData.map((entry, index) => (
             <Cell
               key={`cell-${index}`}
               fill={entry.highlighted ? "#E1386E" : entry.color}

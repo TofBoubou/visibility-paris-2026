@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -23,30 +24,57 @@ interface ScoreBarChartProps {
   height?: number;
 }
 
+function truncateName(name: string, maxLength: number): string {
+  if (name.length <= maxLength) return name;
+  return name.substring(0, maxLength - 1) + "…";
+}
+
 export function ScoreBarChart({ data, height = 300 }: ScoreBarChartProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   // Sort by score descending
   const sortedData = [...data].sort((a, b) => b.score - a.score);
+
+  // Responsive values
+  const yAxisWidth = isMobile ? 70 : 95;
+  const leftMargin = isMobile ? 75 : 100;
+  const rightMargin = isMobile ? 15 : 30;
+  const fontSize = isMobile ? 10 : 12;
+  const maxNameLength = isMobile ? 10 : 20;
+
+  // Prepare data with truncated names for display
+  const displayData = sortedData.map((item) => ({
+    ...item,
+    displayName: truncateName(item.name, maxNameLength),
+  }));
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
-        data={sortedData}
+        data={displayData}
         layout="vertical"
-        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+        margin={{ top: 5, right: rightMargin, left: leftMargin, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#22496A20" />
         <XAxis
           type="number"
           domain={[0, 100]}
-          tick={{ fill: "#22496A", fontSize: 12 }}
+          tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
         />
         <YAxis
           type="category"
-          dataKey="name"
-          tick={{ fill: "#22496A", fontSize: 12 }}
+          dataKey="displayName"
+          tick={{ fill: "#22496A", fontSize }}
           tickLine={{ stroke: "#22496A40" }}
-          width={95}
+          width={yAxisWidth}
         />
         <Tooltip
           content={({ active, payload }) => {
@@ -65,7 +93,7 @@ export function ScoreBarChart({ data, height = 300 }: ScoreBarChartProps) {
           }}
         />
         <Bar dataKey="score" radius={[0, 4, 4, 0]}>
-          {sortedData.map((entry, index) => (
+          {displayData.map((entry, index) => (
             <Cell
               key={`cell-${index}`}
               fill={entry.highlighted ? "#E1386E" : entry.color}

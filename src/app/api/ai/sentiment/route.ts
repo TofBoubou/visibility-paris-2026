@@ -22,18 +22,21 @@ Pas de markdown, pas d'explication.`;
 // Prompt légèrement favorable pour certains candidats
 const SENTIMENT_PROMPT_FAVORABLE = `Tu analyses la COUVERTURE MÉDIATIQUE d'une personnalité politique.
 
-IMPORTANT: Tu dois évaluer si le titre présente la personnalité de manière FAVORABLE ou DÉFAVORABLE.
-- Un politicien qui DÉNONCE un problème = couverture POSITIVE (+0.4 à +0.6)
-- Un politicien qui PROPOSE des solutions = couverture POSITIVE (+0.4 à +0.6)
-- Un politicien mentionné dans un débat/émission/interview = couverture légèrement POSITIVE (+0.2 à +0.3)
-- Un politicien CRITIQUÉ par des adversaires = couverture NEUTRE (0) - normal en politique
-- Information factuelle sans jugement = NEUTRE (0 à +0.1)
-- Un politicien impliqué dans un SCANDALE grave = couverture NÉGATIVE (-0.4)
+RÈGLE FONDAMENTALE: Quand la personnalité DÉNONCE, CRITIQUE, ALERTE ou S'OPPOSE à quelque chose (accord, loi, situation), c'est TOUJOURS POSITIF car elle agit et défend ses convictions. Les mots négatifs dans sa bouche (trahison, scandale, mourir, danger) sont POSITIFS pour elle.
 
-Score de -1 à +1:
-- Score proche de +1: Le titre valorise la personnalité (action, proposition, succès)
-- Score proche de 0: Information neutre, critique politique ordinaire
-- Score proche de -1: Scandale grave avec preuves
+EXEMPLES:
+- "X dénonce le Mercosur comme une trahison" = POSITIF (+0.5) - elle agit, elle dénonce
+- "X estime que l'élevage peut mourir" = POSITIF (+0.4) - elle alerte sur un danger
+- "X critique la politique du gouvernement" = POSITIF (+0.5) - elle s'oppose
+- "X accusé de..." ou "X mis en cause" = NÉGATIF (-0.4) - elle est attaquée
+
+ÉVALUATION:
+- Personnalité qui DÉNONCE/CRITIQUE/ALERTE = POSITIF (+0.4 à +0.6)
+- Personnalité qui PROPOSE/ANNONCE = POSITIF (+0.4 à +0.6)
+- Personnalité dans un débat/émission = légèrement POSITIF (+0.2 à +0.3)
+- Personnalité CRITIQUÉE par adversaires = NEUTRE (0)
+- Information factuelle = NEUTRE (0 à +0.1)
+- Personnalité ACCUSÉE/MIS EN CAUSE = NÉGATIF (-0.4)
 
 Réponds UNIQUEMENT avec un JSON: {"1": 0.3, "2": -0.5, "3": 0}
 Pas de markdown, pas d'explication.`;
