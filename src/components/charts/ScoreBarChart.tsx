@@ -26,6 +26,9 @@ interface ScoreBarChartProps {
 
 function truncateName(name: string, maxLength: number): string {
   if (name.length <= maxLength) return name;
+  // On mobile, try to use just first name
+  const firstName = name.split(" ")[0];
+  if (firstName.length <= maxLength) return firstName;
   return name.substring(0, maxLength - 1) + "…";
 }
 
@@ -42,12 +45,12 @@ export function ScoreBarChart({ data, height = 300 }: ScoreBarChartProps) {
   // Sort by score descending
   const sortedData = [...data].sort((a, b) => b.score - a.score);
 
-  // Responsive values
-  const yAxisWidth = isMobile ? 70 : 95;
-  const leftMargin = isMobile ? 75 : 100;
-  const rightMargin = isMobile ? 15 : 30;
-  const fontSize = isMobile ? 10 : 12;
-  const maxNameLength = isMobile ? 10 : 20;
+  // Responsive values - much more compact on mobile
+  const yAxisWidth = isMobile ? 55 : 95;
+  const leftMargin = isMobile ? 60 : 100;
+  const rightMargin = isMobile ? 10 : 30;
+  const fontSize = isMobile ? 9 : 12;
+  const maxNameLength = isMobile ? 8 : 20;
 
   // Prepare data with truncated names for display
   const displayData = sortedData.map((item) => ({
