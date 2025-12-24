@@ -3,26 +3,50 @@ import { kv } from "@vercel/kv";
 
 export async function POST(request: NextRequest) {
   // Simple auth check - require a secret
-  const { secret } = await request.json().catch(() => ({}));
+  const { secret, pattern, candidate } = await request.json().catch(() => ({}));
 
   if (secret !== process.env.CACHE_CLEAR_SECRET && secret !== "clear-now-2024") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // Get all keys
-    const keys = await kv.keys("*");
+    let keysToDelete: string[] = [];
 
-    if (keys.length === 0) {
-      return NextResponse.json({ message: "Cache already empty", deleted: 0 });
+    // If candidate is specified, only delete sentiment and themes for that candidate
+    if (candidate) {
+      const normalizedName = candidate.toLowerCase().replace(/\s+/g, "_");
+      const sentimentKeys = await kv.keys(`v5:sentiment:${normalizedName}*`);
+      const themesKeys = await kv.keys(`v5:themes:${normalizedName}*`);
+      keysToDelete = [...sentimentKeys, ...themesKeys];
+
+      console.log(`[Cache] Clearing ${keysToDelete.length} keys for candidate: ${candidate}`);
+    }
+    // If pattern is specified, use it to filter keys
+    else if (pattern) {
+      keysToDelete = await kv.keys(pattern);
+      console.log(`[Cache] Clearing ${keysToDelete.length} keys matching pattern: ${pattern}`);
+    }
+    // Otherwise, delete all keys
+    else {
+      keysToDelete = await kv.keys("*");
+      console.log(`[Cache] Clearing ALL ${keysToDelete.length} keys`);
     }
 
-    // Delete all keys
-    await kv.del(...keys);
+    if (keysToDelete.length === 0) {
+      return NextResponse.json({
+        message: "No matching keys found",
+        deleted: 0,
+        pattern: pattern || candidate || "*"
+      });
+    }
+
+    // Delete keys
+    await kv.del(...keysToDelete);
 
     return NextResponse.json({
       message: "Cache cleared",
-      deleted: keys.length
+      deleted: keysToDelete.length,
+      keys: keysToDelete
     });
   } catch (error) {
     console.error("Cache clear error:", error);
