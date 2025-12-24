@@ -2,33 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { cacheGet, cacheSet, buildCacheKey, CACHE_DURATION } from "@/lib/cache";
 
-const THEMES_PROMPT = `Tu agis comme un système d'audit de couverture médiatique. Tu analyses des titres d'articles relatifs à une personnalité politique. Ta mission consiste exclusivement à classifier des titres selon des règles fixes.
+const THEMES_PROMPT = `Tu agis comme un système d'audit de couverture médiatique. Tu analyses des titres d'articles de presse relatifs à une personnalité politique. Ta mission consiste exclusivement à classifier des titres selon des règles fixes. Tu ne produis aucune analyse éditoriale, aucune contextualisation, aucune interprétation implicite. Tu travailles uniquement à partir des titres fournis, sans recours à des connaissances externes.
 
-INTERDICTIONS ABSOLUES:
-- Inventer des faits absents des titres
-- Reformuler ou interpréter le contenu
-- Inférer des intentions, causes ou conséquences
-- Utiliser tout qualificatif idéologique ou subjectif
+Il est strictement interdit d'inventer des faits, de reformuler le contenu des titres, d'inférer des intentions, des causes ou des conséquences, ou d'utiliser tout qualificatif idéologique, politique ou subjectif. Toute sortie doit pouvoir être justifiée mot pour mot par les termes présents dans les titres.
 
-CLASSIFICATION DU TON (par titre):
-- POSITIF: La personnalité AGIT, propose, annonce, défend une position, dénonce, alerte, critique une situation/un tiers
-- NÉGATIF: La personnalité EST critiquée, attaquée, mise en cause, associée à une polémique/échec/controverse/accusation
-- NEUTRE: Fait rapporté sans valorisation ni dépréciation explicite
+Chaque titre est traité individuellement et reçoit obligatoirement une seule classification de ton parmi trois catégories exclusives. Un titre est classé positif si, et seulement si, la personnalité est décrite comme agissant, proposant, annonçant, défendant une position, ou dénonçant, alertant, critiquant une situation, un fait ou un tiers. Toute action de dénonciation, d'alerte ou de critique dirigée vers une situation extérieure est systématiquement considérée comme positive. Un titre est classé négatif si, et seulement si, la personnalité est l'objet d'une critique, d'une attaque, d'une mise en cause, ou si elle est associée à une polémique, un échec, une controverse, une accusation, une enquête ou toute forme de remise en cause. Un titre est classé neutre lorsqu'il se limite à rapporter un fait, une déclaration ou un événement sans indication explicite de valorisation ni de dépréciation. La règle de disambiguïsation est absolue : critiquer ou dénoncer quelque chose est positif ; être critiqué, accusé ou mis en cause est négatif.
 
-RÈGLE ABSOLUE: Critiquer/dénoncer quelque chose = POSITIF. Être critiqué/accusé = NÉGATIF.
+Les titres sont ensuite regroupés par thème. Le ton d'un thème n'est pas évalué qualitativement mais calculé. Tu comptes le nombre de titres positifs, négatifs et neutres associés au thème. Le ton final du thème est déterminé exclusivement par une règle de majorité arithmétique. Si le nombre de titres positifs est strictement supérieur aux autres, le thème est classé positif. Si le nombre de titres négatifs est strictement supérieur aux autres, le thème est classé négatif. En cas d'égalité entre positifs et négatifs, ou si les titres neutres sont majoritaires, le thème est classé neutre. Aucun ajustement, aucune pondération implicite, aucune compensation subjective n'est autorisée.
 
-CALCUL DU TON PAR THÈME (majorité arithmétique):
-- Compter les titres positifs, négatifs, neutres du thème
-- Si positifs > autres → thème "positif"
-- Si négatifs > autres → thème "négatif"
-- Égalité ou neutres majoritaires → thème "neutre"
-
-FORMAT JSON STRICT:
+FORMAT DE SORTIE JSON STRICT:
 {
-  "summary": "Résumé factuel 2-3 phrases (max 250 car)",
+  "summary": "Résumé factuel 2-3 phrases (max 250 caractères)",
   "themes": [
     {
-      "theme": "Nom du thème (max 40 car)",
+      "theme": "Nom du thème (max 40 caractères)",
       "count": nombre_total_titres,
       "tone": "positif" | "neutre" | "négatif",
       "examples": ["titre exact 1", "titre exact 2"]
@@ -36,7 +23,7 @@ FORMAT JSON STRICT:
   ]
 }
 
-JSON uniquement, pas de markdown, pas de commentaire.`;
+JSON uniquement. Pas de markdown. Pas de commentaire. Toute déviation par rapport à ces règles constitue une erreur d'analyse.`;
 
 interface ThemesResponse {
   summary: string;

@@ -78,7 +78,7 @@ export async function isKvAvailable(): Promise<boolean> {
 }
 
 // Cache version - increment to invalidate all cache
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 
 // Build cache keys
 export function buildCacheKey(
