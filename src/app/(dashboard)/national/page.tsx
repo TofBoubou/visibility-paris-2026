@@ -57,6 +57,7 @@ interface CandidateData {
     longLikes: number;
     longComments: number;
     longCount: number;
+    videos: Array<{ title: string }>;
   };
   score: {
     total: number;
@@ -108,6 +109,7 @@ async function fetchCandidateData(candidateId: string, days: number) {
       longLikes: youtube.longLikes || 0,
       longComments: youtube.longComments || 0,
       longCount: youtube.longCount || 0,
+      videos: (youtube.videos || []).map((v: { title: string }) => ({ title: v.title })),
     },
   };
 }
@@ -154,37 +156,57 @@ export default function NationalPage() {
     enabled: !!candidatesData && candidatesData.length > 0,
   });
 
-  // Fetch sentiment data
+  // Fetch sentiment data (press + youtube)
   const { data: sentimentData, isLoading: sentimentLoading } = useQuery({
     queryKey: ["national-sentiment", candidatesData],
     queryFn: async () => {
       if (!candidatesData || candidatesData.length === 0) return null;
       const results = await Promise.all(
         candidatesData.map(async (c) => {
-          const titles = c.press.articles.slice(0, 15).map((a) => a.title);
-          if (titles.length === 0) {
-            return {
-              name: c.name,
-              sentiment: 0,
-              count: 0,
-              positive: 0,
-              neutral: 0,
-              negative: 0,
-            };
+          const pressTitles = c.press.articles.slice(0, 15).map((a) => a.title);
+          const youtubeTitles = c.youtube.videos.slice(0, 15).map((v) => v.title);
+
+          // Fetch press sentiment
+          let pressData = { average: 0, positive: 0, neutral: 0, negative: 0, total: 0 };
+          if (pressTitles.length > 0) {
+            const res = await fetch("/api/ai/sentiment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ candidateName: c.name, titles: pressTitles, source: "press" }),
+            });
+            pressData = await res.json();
           }
-          const res = await fetch("/api/ai/sentiment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ candidateName: c.name, titles }),
-          });
-          const data = await res.json();
+
+          // Fetch youtube sentiment
+          let youtubeData = { average: 0, positive: 0, neutral: 0, negative: 0, total: 0 };
+          if (youtubeTitles.length > 0) {
+            const res = await fetch("/api/ai/sentiment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ candidateName: c.name, titles: youtubeTitles, source: "youtube" }),
+            });
+            youtubeData = await res.json();
+          }
+
+          // Calculate combined average
+          const pressWeight = pressData.total || 0;
+          const youtubeWeight = youtubeData.total || 0;
+          const totalWeight = pressWeight + youtubeWeight;
+          const combinedAvg = totalWeight > 0
+            ? (pressData.average * pressWeight + youtubeData.average * youtubeWeight) / totalWeight
+            : 0;
+
           return {
             name: c.name,
-            sentiment: data.average || 0,
-            count: data.total || titles.length,
-            positive: data.positive || 0,
-            neutral: data.neutral || 0,
-            negative: data.negative || 0,
+            pressSentiment: pressData.average || 0,
+            pressPositive: pressData.positive || 0,
+            pressNeutral: pressData.neutral || 0,
+            pressNegative: pressData.negative || 0,
+            youtubeSentiment: youtubeData.average || 0,
+            youtubePositive: youtubeData.positive || 0,
+            youtubeNeutral: youtubeData.neutral || 0,
+            youtubeNegative: youtubeData.negative || 0,
+            combinedAvg,
           };
         })
       );
@@ -549,7 +571,7 @@ export default function NationalPage() {
                     <SentimentChart
                       data={sentimentData.map((s) => ({
                         name: s.name,
-                        sentiment: s.sentiment,
+                        sentiment: s.combinedAvg,
                         color:
                           sortedData?.find((c) => c.name === s.name)?.color || "#22496A",
                         highlighted: sortedData?.find((c) => c.name === s.name)?.highlighted,
@@ -566,15 +588,15 @@ export default function NationalPage() {
                 <SentimentDetailTable
                   data={sentimentData.map((s) => ({
                     name: s.name,
-                    pressAvg: s.sentiment,
-                    pressPositive: s.positive,
-                    pressNeutral: s.neutral,
-                    pressNegative: s.negative,
-                    youtubeAvg: 0,
-                    youtubePositive: 0,
-                    youtubeNeutral: 0,
-                    youtubeNegative: 0,
-                    combinedAvg: s.sentiment,
+                    pressAvg: s.pressSentiment,
+                    pressPositive: s.pressPositive,
+                    pressNeutral: s.pressNeutral,
+                    pressNegative: s.pressNegative,
+                    youtubeAvg: s.youtubeSentiment,
+                    youtubePositive: s.youtubePositive,
+                    youtubeNeutral: s.youtubeNeutral,
+                    youtubeNegative: s.youtubeNegative,
+                    combinedAvg: s.combinedAvg,
                     highlighted: sortedData?.find((c) => c.name === s.name)?.highlighted,
                   }))}
                 />

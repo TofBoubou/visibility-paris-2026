@@ -44,7 +44,7 @@ function hashTitles(titles: string[]): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { candidateName, titles } = await request.json();
+    const { candidateName, titles, source = "press" } = await request.json();
 
     if (!candidateName || !titles || !Array.isArray(titles)) {
       return NextResponse.json({ error: "Missing data" }, { status: 400 });
@@ -64,18 +64,18 @@ export async function POST(request: NextRequest) {
     // Limit to 25 titles per batch
     const limitedTitles = titles.slice(0, 25);
 
-    // Build cache key with title hash
+    // Build cache key with title hash and source
     const titlesHash = hashTitles(limitedTitles);
-    const cacheKey = buildCacheKey("sentiment", `${candidateName}_${titlesHash}`);
+    const cacheKey = buildCacheKey("sentiment", `${candidateName}_${source}_${titlesHash}`);
 
     // Try to get from cache first
     const cached = await cacheGet<SentimentResponse>(cacheKey);
     if (cached) {
-      console.log(`[Sentiment] Cache HIT for ${candidateName}`);
+      console.log(`[Sentiment] Cache HIT for ${candidateName} (${source})`);
       return NextResponse.json({ ...cached, fromCache: true });
     }
 
-    console.log(`[Sentiment] Cache MISS for ${candidateName}, calling Claude...`);
+    console.log(`[Sentiment] Cache MISS for ${candidateName} (${source}), calling Claude...`);
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
