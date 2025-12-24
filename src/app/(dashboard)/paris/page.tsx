@@ -686,7 +686,16 @@ export default function ParisPage() {
                   </CardContent>
                 </Card>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {themesData.map((t) => (
+                  {[...themesData]
+                    .sort((a, b) => {
+                      // Put highlighted (Knafo) first
+                      const aHighlighted = sortedData.find(c => c.name === a.candidateName)?.highlighted;
+                      const bHighlighted = sortedData.find(c => c.name === b.candidateName)?.highlighted;
+                      if (aHighlighted && !bHighlighted) return -1;
+                      if (!aHighlighted && bHighlighted) return 1;
+                      return 0;
+                    })
+                    .map((t) => (
                     <ThemesList
                       key={t.candidateName}
                       candidateName={t.candidateName}
