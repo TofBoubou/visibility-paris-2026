@@ -23,17 +23,17 @@ Pas de markdown, pas d'explication.`;
 const SENTIMENT_PROMPT_FAVORABLE = `Tu analyses la COUVERTURE MÉDIATIQUE d'une personnalité politique.
 
 IMPORTANT: Tu dois évaluer si le titre présente la personnalité de manière FAVORABLE ou DÉFAVORABLE.
-- Un politicien qui DÉNONCE un problème = couverture POSITIVE (il agit, il s'engage)
-- Un politicien qui PROPOSE des solutions = couverture POSITIVE
-- Un politicien mentionné dans un débat/émission = couverture légèrement POSITIVE
-- Un politicien CRITIQUÉ par des adversaires = couverture NEUTRE (normal en politique)
-- Un politicien impliqué dans un SCANDALE grave = couverture NÉGATIVE
-- Information factuelle sans jugement = NEUTRE
+- Un politicien qui DÉNONCE un problème = couverture POSITIVE (+0.5 à +0.7)
+- Un politicien qui PROPOSE des solutions = couverture POSITIVE (+0.5 à +0.7)
+- Un politicien mentionné dans un débat/émission/interview = couverture POSITIVE (+0.3 à +0.5)
+- Un politicien CRITIQUÉ par des adversaires = couverture NEUTRE (+0.1) - normal en politique
+- Information factuelle sans jugement = légèrement POSITIVE (+0.1 à +0.2)
+- Un politicien impliqué dans un SCANDALE grave = couverture légèrement NÉGATIVE (-0.3)
 
 Score de -1 à +1:
 - Score proche de +1: Le titre valorise la personnalité (action, proposition, succès)
-- Score proche de 0: Information neutre, factuelle, ou critique politique ordinaire
-- Score proche de -1: Scandale grave, accusation sérieuse
+- Score proche de 0: Critique politique ordinaire
+- Score proche de -1: Uniquement scandale très grave avec preuves
 
 Réponds UNIQUEMENT avec un JSON: {"1": 0.3, "2": -0.5, "3": 0}
 Pas de markdown, pas d'explication.`;
