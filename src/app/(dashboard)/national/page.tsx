@@ -607,7 +607,7 @@ export default function NationalPage() {
                               </td>
                               <td className="py-3 px-2">
                                 <div className="flex flex-wrap gap-1">
-                                  {candidateThemes.slice(0, 2).map((theme: { theme: string; count: number; tone: string }, i: number) => (
+                                  {candidateThemes.slice(0, 3).map((theme: { theme: string; count: number; tone: string }, i: number) => (
                                     <span
                                       key={i}
                                       className={`inline-flex items-center text-xs px-1.5 py-0.5 rounded ${
