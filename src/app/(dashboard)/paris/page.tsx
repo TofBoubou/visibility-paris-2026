@@ -130,11 +130,33 @@ export default function ParisPage() {
     if (!tableRef.current) return;
     setIsExporting(true);
     try {
-      const canvas = await html2canvas(tableRef.current, {
+      // Store original styles to restore after capture
+      const container = tableRef.current;
+      const originalOverflow = container.style.overflow;
+      const originalWidth = container.style.width;
+      const originalMinWidth = container.style.minWidth;
+
+      // Get the full scrollable width
+      const fullWidth = container.scrollWidth;
+
+      // Temporarily expand container to full width for capture
+      container.style.overflow = "visible";
+      container.style.width = `${fullWidth}px`;
+      container.style.minWidth = `${fullWidth}px`;
+
+      const canvas = await html2canvas(container, {
         backgroundColor: "#ffffff",
         scale: 2,
         logging: false,
+        width: fullWidth,
+        windowWidth: fullWidth,
       });
+
+      // Restore original styles
+      container.style.overflow = originalOverflow;
+      container.style.width = originalWidth;
+      container.style.minWidth = originalMinWidth;
+
       const link = document.createElement("a");
       link.download = `classement-paris-${period}.png`;
       link.href = canvas.toDataURL("image/png");
