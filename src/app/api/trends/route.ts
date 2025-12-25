@@ -15,7 +15,7 @@ async function fetchFromPython(keywords: string[], days: number): Promise<{
   rateLimited: boolean;
 }> {
   try {
-    // In production, this calls the Python serverless function at /api/trends
+    // In production, this calls the Python serverless function at /py-api/trends
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -23,26 +23,41 @@ async function fetchFromPython(keywords: string[], days: number): Promise<{
     const keywordsParam = encodeURIComponent(keywords.join(","));
     const url = `${baseUrl}/py-api/trends?keywords=${keywordsParam}&days=${days}`;
 
-    console.log(`[Trends] Fetching from Python: ${keywords.length} keywords`);
+    console.log(`[Trends] baseUrl=${baseUrl}`);
+    console.log(`[Trends] Fetching URL: ${url}`);
+    console.log(`[Trends] Keywords: ${keywords.join(", ")}`);
 
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
+    console.log(`[Trends] Python response status: ${response.status}`);
+
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
+      const errorText = await response.text();
+      console.error(`[Trends] Python error response: ${errorText}`);
+      let error: { error?: string } = {};
+      try {
+        error = JSON.parse(errorText);
+      } catch {
+        error = { error: errorText };
+      }
       if (response.status === 429 || error.error === "RATE_LIMITED") {
         return { scores: {}, error: "RATE_LIMITED", rateLimited: true };
       }
-      return { scores: {}, error: error.error || "Unknown error", rateLimited: false };
+      return { scores: {}, error: error.error || `HTTP ${response.status}`, rateLimited: false };
     }
 
     const data = await response.json();
+    console.log(`[Trends] Python response data:`, JSON.stringify(data));
 
     if (data.error === "RATE_LIMITED") {
       return { scores: data.scores || {}, error: "RATE_LIMITED", rateLimited: true };
     }
+
+    const scoresCount = Object.keys(data.scores || {}).length;
+    console.log(`[Trends] Got ${scoresCount} scores from Python`);
 
     return {
       scores: data.scores || {},
@@ -56,20 +71,29 @@ async function fetchFromPython(keywords: string[], days: number): Promise<{
 }
 
 export async function POST(request: NextRequest) {
+  console.log(`[Trends] POST request received`);
   try {
-    const { keywords, days = 7 } = await request.json();
+    const body = await request.json();
+    console.log(`[Trends] Request body:`, JSON.stringify(body));
+
+    const { keywords, days = 7 } = body;
 
     if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+      console.error(`[Trends] Missing keywords array`);
       return NextResponse.json({ error: "Missing keywords array" }, { status: 400 });
     }
 
+    console.log(`[Trends] Processing ${keywords.length} keywords for ${days} days`);
+
     // Build a single cache key for the whole batch (period + all keywords sorted)
     const batchKey = buildCacheKey("trends", keywords.sort().join("|"), days);
+    console.log(`[Trends] Cache key: ${batchKey}`);
 
     // Check cache first
     const cachedData = await cacheGet<TrendsResult>(batchKey);
     if (cachedData) {
       console.log(`[Trends] Cache HIT for batch (${keywords.length} keywords)`);
+      console.log(`[Trends] Cached scores:`, JSON.stringify(cachedData.scores));
       return NextResponse.json({
         ...cachedData,
         fromCache: true,
@@ -81,6 +105,8 @@ export async function POST(request: NextRequest) {
     // Fetch all keywords from Python backend
     const result = await fetchFromPython(keywords, days);
 
+    console.log(`[Trends] Python result - scores: ${Object.keys(result.scores).length}, error: ${result.error}, rateLimited: ${result.rateLimited}`);
+
     const response: TrendsResult = {
       scores: result.scores,
       fromCache: false,
@@ -91,9 +117,12 @@ export async function POST(request: NextRequest) {
     // Cache successful result (even partial)
     if (Object.keys(result.scores).length > 0) {
       await cacheSet(batchKey, response, CACHE_DURATION.TRENDS);
-      console.log(`[Trends] Cached batch result`);
+      console.log(`[Trends] Cached batch result with ${Object.keys(result.scores).length} scores`);
+    } else {
+      console.log(`[Trends] No scores to cache`);
     }
 
+    console.log(`[Trends] Returning response:`, JSON.stringify(response));
     return NextResponse.json(response);
   } catch (error) {
     console.error("[Trends] API error:", error);
