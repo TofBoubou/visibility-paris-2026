@@ -157,24 +157,46 @@ export default function ParisPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Fetch Google Trends data
+  const { data: trendsData, isLoading: trendsLoading } = useQuery({
+    queryKey: ["paris-trends", selectedParis, period],
+    queryFn: async () => {
+      const keywords = selectedParis
+        .map((id) => PARIS_CANDIDATES[id]?.searchTerms[0])
+        .filter(Boolean);
+      if (keywords.length === 0) return null;
+      const res = await fetch("/api/trends", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keywords, days }),
+      });
+      return res.json();
+    },
+    staleTime: 30 * 60 * 1000, // 30 min
+  });
+
   // Calculate scores
   const { data: scoresData } = useQuery({
-    queryKey: ["paris-scores", candidatesData],
+    queryKey: ["paris-scores", candidatesData, trendsData],
     queryFn: async () => {
       if (!candidatesData || candidatesData.length === 0) return null;
       const res = await fetch("/api/scores", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          candidates: candidatesData.map((d) => ({
-            id: d.id,
-            name: d.name,
-            trends: 50, // Placeholder
-            pressCount: d.press.count,
-            pressDomains: d.press.domains,
-            wikipediaViews: d.wikipedia.views,
-            youtubeViews: d.youtube.totalViews,
-          })),
+          candidates: candidatesData.map((d) => {
+            const searchTerm = PARIS_CANDIDATES[d.id]?.searchTerms[0];
+            const trendsScore = trendsData?.scores?.[searchTerm] ?? 0;
+            return {
+              id: d.id,
+              name: d.name,
+              trends: trendsScore,
+              pressCount: d.press.count,
+              pressDomains: d.press.domains,
+              wikipediaViews: d.wikipedia.views,
+              youtubeViews: d.youtube.totalViews,
+            };
+          }),
           period,
         }),
       });
@@ -493,6 +515,9 @@ export default function ParisPage() {
                             Score
                           </th>
                           <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Trends
+                          </th>
+                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                             Presse
                           </th>
                           <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
@@ -555,6 +580,13 @@ export default function ParisPage() {
                               </td>
                               <td className="py-3 px-2 text-right font-bold">
                                 {candidate.score.total.toFixed(1)}
+                              </td>
+                              <td className="py-3 px-2 text-right text-gray-700">
+                                {(() => {
+                                  const searchTerm = PARIS_CANDIDATES[candidate.id]?.searchTerms[0];
+                                  const score = trendsData?.scores?.[searchTerm];
+                                  return score !== undefined ? score.toFixed(0) : "-";
+                                })()}
                               </td>
                               <td className="py-3 px-2 text-right text-gray-700">
                                 {candidate.press.count}
