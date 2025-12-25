@@ -12,6 +12,42 @@ export interface Sondage {
 }
 
 export const SONDAGES_PARIS_2026: Sondage[] = [
+  // Ipsos-BVA Décembre 2025 - VÉRIFIÉ sur BFMTV/Le Parisien
+  {
+    date: "2025-12-13",
+    institut: "Ipsos-BVA",
+    commanditaire: "Le Parisien",
+    echantillon: 849,
+    methode: "Internet, 5-12 déc 2025",
+    hypothese: "Gauche unie (PS-Écologistes-PCF) sans LFI",
+    sourceUrl: "https://www.bfmtv.com/politique/elections/municipales/municipales-a-paris-la-gauche-unie-sans-lfi-autour-d-emmanuel-gregoire-donnee-en-tete-devant-rachida-dati-au-premier-tour_AD-202512140050.html",
+    scores: {
+      "Emmanuel Grégoire": 32,
+      "Rachida Dati": 27,
+      "Pierre-Yves Bournazel": 14,
+      "Sophia Chikirou": 13,
+      "Thierry Mariani": 7,
+      "Sarah Knafo": 7,
+    },
+  },
+  {
+    date: "2025-12-13",
+    institut: "Ipsos-BVA",
+    commanditaire: "Le Parisien",
+    echantillon: 849,
+    methode: "Internet, 5-12 déc 2025",
+    hypothese: "Listes séparées à gauche (PS vs Écolos)",
+    sourceUrl: "https://www.bfmtv.com/politique/elections/municipales/municipales-a-paris-la-gauche-unie-sans-lfi-autour-d-emmanuel-gregoire-donnee-en-tete-devant-rachida-dati-au-premier-tour_AD-202512140050.html",
+    scores: {
+      "Rachida Dati": 27,
+      "Emmanuel Grégoire": 20,
+      "David Belliard": 14,
+      "Pierre-Yves Bournazel": 13,
+      "Sophia Chikirou": 12,
+      "Thierry Mariani": 7,
+      "Sarah Knafo": 7,
+    },
+  },
   // IFOP Novembre 2025 - VÉRIFIÉ sur ifop.com
   {
     date: "2025-11-05",
