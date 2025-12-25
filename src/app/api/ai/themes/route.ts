@@ -183,7 +183,43 @@ export async function POST(request: NextRequest) {
       }
 
       console.log(`[Themes] Parsing JSON for ${candidateName}, length: ${cleanJson.length}`);
-      const parsed = JSON.parse(cleanJson) as ThemesResponse;
+
+      let parsed: ThemesResponse;
+      try {
+        parsed = JSON.parse(cleanJson) as ThemesResponse;
+      } catch {
+        // Fix unescaped quotes inside string values (common Claude issue)
+        // Process character by character to properly handle nested quotes
+        let fixed = "";
+        let inString = false;
+
+        for (let i = 0; i < cleanJson.length; i++) {
+          const char = cleanJson[i];
+          const prevChar = i > 0 ? cleanJson[i - 1] : "";
+
+          if (char === '"' && prevChar !== "\\") {
+            if (!inString) {
+              inString = true;
+              fixed += char;
+            } else {
+              // Check if this quote ends the string (followed by : , ] } or whitespace)
+              const nextChars = cleanJson.slice(i + 1, i + 3).trim();
+              if (nextChars.match(/^[,:\]\}]/) || nextChars === "") {
+                inString = false;
+                fixed += char;
+              } else {
+                // This is an inner quote, replace with single quote
+                fixed += "'";
+              }
+            }
+          } else {
+            fixed += char;
+          }
+        }
+
+        console.log(`[Themes] Retrying parse after quote fix for ${candidateName}`);
+        parsed = JSON.parse(fixed) as ThemesResponse;
+      }
 
       // Validate and sanitize
       const result: ThemesResponse = {
