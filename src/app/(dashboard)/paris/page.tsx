@@ -480,7 +480,7 @@ export default function ParisPage() {
                       <h2 className="text-lg font-bold text-gray-900">Municipales Paris 2026</h2>
                       <p className="text-sm text-gray-500">Classement visibilité médiatique • {period}</p>
                     </div>
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm min-w-[900px]">
                       <thead>
                         <tr className="border-b border-gray-200">
                           <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
@@ -492,8 +492,26 @@ export default function ParisPage() {
                           <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                             Score
                           </th>
+                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Presse
+                          </th>
+                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Sources
+                          </th>
                           <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
-                            Thèmes principaux
+                            Top média
+                          </th>
+                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Wikipedia
+                          </th>
+                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            YouTube
+                          </th>
+                          <th className="text-center py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Sentiment
+                          </th>
+                          <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
+                            Thèmes
                           </th>
                         </tr>
                       </thead>
@@ -502,6 +520,12 @@ export default function ParisPage() {
                           const candidateThemes = themesData?.find(
                             (t) => t.candidateName === candidate.name
                           )?.themes || [];
+                          const candidateSentiment = sentimentData?.find(
+                            (s) => s.name === candidate.name
+                          );
+                          const sentimentScore = candidateSentiment?.combinedAvg || 0;
+                          const sentimentDisplay = sentimentScore > 0.15 ? "+" : sentimentScore < -0.15 ? "−" : "○";
+                          const sentimentColor = sentimentScore > 0.15 ? "text-green-600 bg-green-50" : sentimentScore < -0.15 ? "text-red-600 bg-red-50" : "text-gray-600 bg-gray-100";
                           return (
                             <tr
                               key={candidate.id}
@@ -532,12 +556,32 @@ export default function ParisPage() {
                               <td className="py-3 px-2 text-right font-bold">
                                 {candidate.score.total.toFixed(1)}
                               </td>
+                              <td className="py-3 px-2 text-right text-gray-700">
+                                {candidate.press.count}
+                              </td>
+                              <td className="py-3 px-2 text-right text-gray-700">
+                                {candidate.press.domains}
+                              </td>
+                              <td className="py-3 px-2 text-gray-700 text-xs max-w-[100px] truncate">
+                                {candidate.press.topMedia || "-"}
+                              </td>
+                              <td className="py-3 px-2 text-right text-gray-700">
+                                {formatNumber(candidate.wikipedia.views)}
+                              </td>
+                              <td className="py-3 px-2 text-right text-gray-700">
+                                {formatNumber(candidate.youtube.totalViews)}
+                              </td>
+                              <td className="py-3 px-2 text-center">
+                                <span className={`inline-block w-6 h-6 rounded-full text-sm font-bold leading-6 ${sentimentColor}`}>
+                                  {sentimentDisplay}
+                                </span>
+                              </td>
                               <td className="py-3 px-2">
-                                <div className="flex flex-wrap gap-1.5">
-                                  {candidateThemes.slice(0, 3).map((theme: { theme: string; count: number; tone: string }, i: number) => (
+                                <div className="flex flex-wrap gap-1">
+                                  {candidateThemes.slice(0, 2).map((theme: { theme: string; count: number; tone: string }, i: number) => (
                                     <span
                                       key={i}
-                                      className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
+                                      className={`inline-flex items-center text-xs px-1.5 py-0.5 rounded ${
                                         theme.tone === "positif"
                                           ? "text-green-600 bg-green-50"
                                           : theme.tone === "négatif"
@@ -546,14 +590,10 @@ export default function ParisPage() {
                                       }`}
                                     >
                                       {theme.theme}
-                                      <span className="opacity-70">({theme.count})</span>
                                     </span>
                                   ))}
                                   {candidateThemes.length === 0 && !themesLoading && (
                                     <span className="text-gray-400 text-xs">-</span>
-                                  )}
-                                  {themesLoading && (
-                                    <span className="text-gray-400 text-xs">Analyse...</span>
                                   )}
                                 </div>
                               </td>
