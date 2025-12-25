@@ -19,7 +19,7 @@ async function fetchFromPython(keywords: string[], days: number): Promise<{
     const baseUrl = "https://visibility-paris-2026.vercel.app";
 
     const keywordsParam = encodeURIComponent(keywords.join(","));
-    const url = `${baseUrl}/py-api/trends?keywords=${keywordsParam}&days=${days}`;
+    const url = `${baseUrl}/api/pytrends?keywords=${keywordsParam}&days=${days}`;
 
     console.log(`[Trends] Using production domain for Python endpoint`);
     console.log(`[Trends] Fetching URL: ${url}`);
