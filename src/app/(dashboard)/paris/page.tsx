@@ -583,6 +583,9 @@ export default function ParisPage() {
                               </td>
                               <td className="py-3 px-2 text-right text-gray-700">
                                 {(() => {
+                                  if (trendsLoading) {
+                                    return <Loader2 className="w-3 h-3 animate-spin text-gray-400 inline" />;
+                                  }
                                   const searchTerm = PARIS_CANDIDATES[candidate.id]?.searchTerms[0];
                                   const score = trendsData?.scores?.[searchTerm];
                                   return score !== undefined ? score.toFixed(0) : "-";
