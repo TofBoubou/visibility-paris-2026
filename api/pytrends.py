@@ -156,6 +156,12 @@ def fetch_trends_with_pivot(keywords: list, timeframe: str) -> dict:
         if kw not in all_scores:
             all_scores[kw] = _memory_cache.get(kw, 0)
 
+    # Normalize to 0-100 scale (max = 100)
+    if all_scores:
+        max_score = max(all_scores.values())
+        if max_score > 0:
+            all_scores = {kw: round((score / max_score) * 100, 1) for kw, score in all_scores.items()}
+
     return {
         "scores": all_scores,
         "error": errors[0] if errors else None,
