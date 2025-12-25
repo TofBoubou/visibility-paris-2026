@@ -15,15 +15,13 @@ async function fetchFromPython(keywords: string[], days: number): Promise<{
   rateLimited: boolean;
 }> {
   try {
-    // In production, this calls the Python serverless function at /py-api/trends
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    // Use production domain to avoid preview deployment auth
+    const baseUrl = "https://visibility-paris-2026.vercel.app";
 
     const keywordsParam = encodeURIComponent(keywords.join(","));
     const url = `${baseUrl}/py-api/trends?keywords=${keywordsParam}&days=${days}`;
 
-    console.log(`[Trends] baseUrl=${baseUrl}`);
+    console.log(`[Trends] Using production domain for Python endpoint`);
     console.log(`[Trends] Fetching URL: ${url}`);
     console.log(`[Trends] Keywords: ${keywords.join(", ")}`);
 
