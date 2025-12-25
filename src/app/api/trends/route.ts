@@ -21,7 +21,7 @@ async function fetchFromPython(keywords: string[], days: number): Promise<{
       : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const keywordsParam = encodeURIComponent(keywords.join(","));
-    const url = `${baseUrl}/api/trends?keywords=${keywordsParam}&days=${days}`;
+    const url = `${baseUrl}/py-api/trends?keywords=${keywordsParam}&days=${days}`;
 
     console.log(`[Trends] Fetching from Python: ${keywords.length} keywords`);
 
