@@ -33,6 +33,7 @@ import {
   Newspaper,
   Loader2,
   ChevronDown,
+  ChevronUp,
   ExternalLink,
   Download,
   MapPin,
@@ -126,6 +127,8 @@ export default function NationalPage() {
   const days = PERIOD_DAYS[period];
   const tableRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [sortColumn, setSortColumn] = useState<string>("score");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const exportToPng = useCallback(async () => {
     if (!tableRef.current) return;
@@ -324,8 +327,55 @@ export default function NationalPage() {
     };
   });
 
-  // Sort by score
-  const sortedData = enrichedData?.sort((a, b) => b.score.total - a.score.total);
+  // Sort function
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "desc" ? "asc" : "desc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("desc");
+    }
+  };
+
+  // Sort data based on selected column
+  const sortedData = enrichedData?.sort((a, b) => {
+    let aVal = 0;
+    let bVal = 0;
+
+    switch (sortColumn) {
+      case "score":
+        aVal = a.score.total;
+        bVal = b.score.total;
+        break;
+      case "trends":
+        const aSearchTerm = NATIONAL_CANDIDATES[a.id]?.searchTerms[0];
+        const bSearchTerm = NATIONAL_CANDIDATES[b.id]?.searchTerms[0];
+        aVal = trendsData?.scores?.[aSearchTerm] ?? 0;
+        bVal = trendsData?.scores?.[bSearchTerm] ?? 0;
+        break;
+      case "press":
+        aVal = a.press.count;
+        bVal = b.press.count;
+        break;
+      case "sources":
+        aVal = a.press.domains;
+        bVal = b.press.domains;
+        break;
+      case "wikipedia":
+        aVal = a.wikipedia.views;
+        bVal = b.wikipedia.views;
+        break;
+      case "youtube":
+        aVal = a.youtube.totalViews;
+        bVal = b.youtube.totalViews;
+        break;
+      default:
+        aVal = a.score.total;
+        bVal = b.score.total;
+    }
+
+    return sortDirection === "desc" ? bVal - aVal : aVal - bVal;
+  });
 
   const selectedCandidates = selectedNational
     .map((id) => NATIONAL_CANDIDATES[id])
@@ -533,26 +583,62 @@ export default function NationalPage() {
                           <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                             Candidat
                           </th>
-                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
-                            Score
+                          <th
+                            className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500 cursor-pointer hover:text-gray-700 select-none"
+                            onClick={() => handleSort("score")}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Score
+                              {sortColumn === "score" && (sortDirection === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                            </span>
                           </th>
-                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
-                            Trends
+                          <th
+                            className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500 cursor-pointer hover:text-gray-700 select-none"
+                            onClick={() => handleSort("trends")}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Trends
+                              {sortColumn === "trends" && (sortDirection === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                            </span>
                           </th>
-                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
-                            Presse
+                          <th
+                            className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500 cursor-pointer hover:text-gray-700 select-none"
+                            onClick={() => handleSort("press")}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Presse
+                              {sortColumn === "press" && (sortDirection === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                            </span>
                           </th>
-                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
-                            Sources
+                          <th
+                            className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500 cursor-pointer hover:text-gray-700 select-none"
+                            onClick={() => handleSort("sources")}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Sources
+                              {sortColumn === "sources" && (sortDirection === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                            </span>
                           </th>
                           <th className="text-left py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                             Top média
                           </th>
-                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
-                            Wikipedia
+                          <th
+                            className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500 cursor-pointer hover:text-gray-700 select-none"
+                            onClick={() => handleSort("wikipedia")}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              Wikipedia
+                              {sortColumn === "wikipedia" && (sortDirection === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                            </span>
                           </th>
-                          <th className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
-                            YouTube
+                          <th
+                            className="text-right py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500 cursor-pointer hover:text-gray-700 select-none"
+                            onClick={() => handleSort("youtube")}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              YouTube
+                              {sortColumn === "youtube" && (sortDirection === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)}
+                            </span>
                           </th>
                           <th className="text-center py-3 px-2 font-medium uppercase tracking-wide text-xs text-gray-500">
                             Sentiment
