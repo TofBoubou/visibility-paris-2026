@@ -18,7 +18,7 @@ import {
   WikipediaChart,
   SentimentChart,
   SentimentDetailTable,
-  GeoComparison,
+  GeoTab,
 } from "@/components/charts";
 import { ThemesList, ThemesOverview } from "@/components/ai/ThemesList";
 import { TvRadioSection } from "@/components/charts/TvRadioSection";
@@ -309,45 +309,6 @@ export default function NationalPage() {
       return results;
     },
     enabled: !!candidatesData && candidatesData.length > 0,
-  });
-
-  // Fetch geographic trends data (comparative mode - max 5 candidates)
-  const { data: geoTrendsData, isLoading: geoTrendsLoading } = useQuery({
-    queryKey: ["national-geo-trends-comparative", selectedNational, period],
-    queryFn: async () => {
-      const keywords = selectedNational
-        .map((id) => NATIONAL_CANDIDATES[id]?.searchTerms[0])
-        .filter(Boolean);
-      if (keywords.length === 0) return null;
-
-      console.log("[GeoTrendsNational] ====== COMPARATIVE FETCH ======");
-      console.log("[GeoTrendsNational] Keywords:", keywords);
-      console.log("[GeoTrendsNational] Count:", keywords.length);
-
-      const res = await fetch("/api/trends/geo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keywords,
-          geo: "FR",
-          days,
-          resolution: "REGION",
-          comparative: true,
-        }),
-      });
-
-      const data = await res.json();
-      console.log("[GeoTrendsNational] Response:", {
-        regions: Object.keys(data.results || {}).length,
-        fromCache: data.fromCache,
-        rateLimited: data.rateLimited,
-        error: data.error,
-      });
-
-      return data;
-    },
-    staleTime: 30 * 60 * 1000, // 30 min
-    enabled: selectedNational.length > 0 && selectedNational.length <= 5,
   });
 
   // Merge scores with candidate data
@@ -980,57 +941,16 @@ export default function NationalPage() {
           </TabsContent>
 
           <TabsContent value="geo">
-            {selectedNational.length > 5 ? (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="font-medium">Sélectionnez maximum 5 candidats</p>
-                  <p className="text-sm mt-2">
-                    La comparaison géographique nécessite 5 candidats ou moins pour des scores comparables.
-                  </p>
-                  <p className="text-sm mt-1">
-                    Actuellement sélectionnés : {selectedNational.length}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : geoTrendsLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                <span className="ml-2 text-gray-600">Chargement des données géographiques...</span>
-              </div>
-            ) : geoTrendsData?.rateLimited ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <MapPin className="w-12 h-12 mx-auto mb-4 text-orange-400" />
-                  <p className="font-medium text-orange-700">Limite API atteinte</p>
-                  <p className="text-sm mt-2 text-gray-600">
-                    Réessayez dans quelques minutes. Les données ne sont pas mises en cache en cas de limite.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : geoTrendsData?.results && Object.keys(geoTrendsData.results).length > 0 ? (
-              <ExportableCard title="Comparaison par région" filename={`national-geo-comparison-${period}`}>
-                <GeoComparison
-                  data={geoTrendsData.results}
-                  candidates={sortedData.map((c) => ({
-                    id: c.id,
-                    name: c.name,
-                    searchTerm: NATIONAL_CANDIDATES[c.id]?.searchTerms[0] || "",
-                    color: c.color,
-                  }))}
-                />
-              </ExportableCard>
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>Pas de données géographiques disponibles</p>
-                  {geoTrendsData?.error && (
-                    <p className="text-sm mt-2 text-red-500">{geoTrendsData.error}</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            <GeoTab
+              allCandidates={sortedData.map((c) => ({
+                id: c.id,
+                name: c.name,
+                searchTerm: NATIONAL_CANDIDATES[c.id]?.searchTerms[0] || "",
+                color: c.color,
+              }))}
+              days={days}
+              period={period}
+            />
           </TabsContent>
         </Tabs>
       )}
