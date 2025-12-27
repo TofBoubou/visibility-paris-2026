@@ -242,7 +242,11 @@ export function GeoTab({ allCandidates, days, period }: GeoTabProps) {
 
       {/* Individual candidate charts */}
       {!isLoading && !geoData?.rateLimited && individualData.length > 0 && (
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Profil régional de chaque candidat. Les scores sont comparatifs : un candidat à 60 est moins recherché qu'un autre à 100 dans la même région.
+          </p>
+          <div className="grid md:grid-cols-2 gap-6">
           {individualData.map((candidate) => (
             <ExportableCard
               key={candidate.id}
@@ -270,6 +274,7 @@ export function GeoTab({ allCandidates, days, period }: GeoTabProps) {
               )}
             </ExportableCard>
           ))}
+          </div>
         </div>
       )}
 
