@@ -18,9 +18,6 @@ import {
   WikipediaChart,
   SentimentChart,
   SentimentDetailTable,
-  GeoTrendsChart,
-  GeoTrendsSingleCandidate,
-  GeoTrendsComparison,
 } from "@/components/charts";
 import { ThemesList, ThemesOverview } from "@/components/ai/ThemesList";
 import { SondagesSection } from "@/components/charts/SondagesChart";
@@ -38,7 +35,6 @@ import {
   ChevronDown,
   ExternalLink,
   Download,
-  MapPin,
 } from "lucide-react";
 
 interface CandidateData {
@@ -319,72 +315,6 @@ export default function ParisPage() {
     enabled: !!candidatesData && candidatesData.length > 0,
   });
 
-  // Fetch geographic trends data (Ile-de-France cities)
-  const { data: geoTrendsData, isLoading: geoTrendsLoading } = useQuery({
-    queryKey: ["paris-geo-trends", selectedParis, period],
-    queryFn: async () => {
-      const keywords = selectedParis
-        .map((id) => PARIS_CANDIDATES[id]?.searchTerms[0])
-        .filter(Boolean);
-      console.log("[GeoTrends Frontend] ====== FETCH START ======");
-      console.log("[GeoTrends Frontend] Selected candidates:", selectedParis);
-      console.log("[GeoTrends Frontend] Keywords:", keywords);
-      console.log("[GeoTrends Frontend] Days:", days);
-
-      if (keywords.length === 0) {
-        console.log("[GeoTrends Frontend] No keywords, returning null");
-        return null;
-      }
-
-      console.log("[GeoTrends Frontend] Calling /api/trends/geo...");
-      const res = await fetch("/api/trends/geo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keywords,
-          geo: "FR-J", // Ile-de-France
-          days,
-          resolution: "CITY",
-        }),
-      });
-
-      console.log("[GeoTrends Frontend] Response status:", res.status);
-      const data = await res.json();
-      console.log("[GeoTrends Frontend] Response data:", JSON.stringify(data).substring(0, 500));
-      console.log("[GeoTrends Frontend] Results keys:", Object.keys(data.results || {}));
-      console.log("[GeoTrends Frontend] Error:", data.error);
-      console.log("[GeoTrends Frontend] From cache:", data.fromCache);
-      console.log("[GeoTrends Frontend] Rate limited:", data.rateLimited);
-
-      // Log each keyword's results
-      for (const [kw, cities] of Object.entries(data.results || {})) {
-        const cityArray = cities as Array<{name: string; score: number}>;
-        console.log(`[GeoTrends Frontend] "${kw}": ${cityArray.length} cities`);
-      }
-
-      // Map results to candidates
-      const mapped = selectedParis.map((id) => {
-        const candidate = PARIS_CANDIDATES[id];
-        const searchTerm = candidate?.searchTerms[0];
-        const cities = data.results?.[searchTerm] || [];
-        console.log(`[GeoTrends Frontend] Mapping ${candidate?.name} (${searchTerm}): ${cities.length} cities`);
-        return {
-          candidateId: id,
-          candidateName: candidate?.name || id,
-          color: candidate?.color || "#666",
-          highlighted: candidate?.highlighted,
-          cities,
-        };
-      });
-
-      console.log("[GeoTrends Frontend] ====== FETCH END ======");
-      console.log("[GeoTrends Frontend] Mapped data:", mapped.map(m => ({ name: m.candidateName, cities: m.cities.length })));
-
-      return mapped;
-    },
-    staleTime: 30 * 60 * 1000, // 30 min
-  });
-
   // Merge scores with candidate data
   const enrichedData = candidatesData?.map((c) => {
     const score = scoresData?.scores?.find((s: { id: string }) => s.id === c.id);
@@ -566,10 +496,6 @@ export default function ParisPage() {
             <TabsTrigger value="youtube">
               <Youtube className="w-4 h-4 mr-1.5" />
               YouTube
-            </TabsTrigger>
-            <TabsTrigger value="geo">
-              <MapPin className="w-4 h-4 mr-1.5" />
-              Geo IDF
             </TabsTrigger>
           </TabsList>
 
@@ -1005,77 +931,6 @@ export default function ParisPage() {
                 }))
               )}
             />
-          </TabsContent>
-
-          <TabsContent value="geo">
-            {geoTrendsLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                <span className="ml-2 text-gray-500 text-sm">
-                  Chargement des donnees geographiques...
-                </span>
-              </div>
-            ) : geoTrendsData && geoTrendsData.some((d) => d.cities.length > 0) ? (
-              <div className="space-y-6">
-                {/* Comparison overview */}
-                <ExportableCard
-                  title="Interet par ville - Ile-de-France"
-                  filename={`paris-geo-trends-${period}`}
-                >
-                  <p className="text-sm text-gray-500 mb-4">
-                    Ou recherche-t-on le plus chaque candidat en Ile-de-France ?
-                    Score de 0 a 100 (100 = ville avec le plus de recherches).
-                  </p>
-                  <GeoTrendsComparison data={geoTrendsData} />
-                </ExportableCard>
-
-                {/* Combined chart */}
-                <ExportableCard
-                  title="Comparaison par ville"
-                  filename={`paris-geo-comparison-${period}`}
-                >
-                  <GeoTrendsChart data={geoTrendsData} maxCities={12} />
-                </ExportableCard>
-
-                {/* Individual candidate charts */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  {geoTrendsData
-                    .filter((d) => d.cities.length > 0)
-                    .sort((a, b) => {
-                      // Put highlighted first
-                      if (a.highlighted && !b.highlighted) return -1;
-                      if (!a.highlighted && b.highlighted) return 1;
-                      return 0;
-                    })
-                    .map((candidate) => (
-                      <ExportableCard
-                        key={candidate.candidateId}
-                        title={candidate.candidateName}
-                        filename={`paris-geo-${candidate.candidateId}-${period}`}
-                      >
-                        <GeoTrendsSingleCandidate
-                          candidateName={candidate.candidateName}
-                          color={candidate.color}
-                          highlighted={candidate.highlighted}
-                          cities={candidate.cities}
-                          maxCities={10}
-                        />
-                      </ExportableCard>
-                    ))}
-                </div>
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <MapPin className="w-8 h-8 mx-auto mb-3 text-gray-300" />
-                  <p>Pas de donnees geographiques disponibles.</p>
-                  <p className="text-sm mt-2">
-                    Les donnees Google Trends par ville peuvent ne pas etre disponibles
-                    pour tous les candidats ou periodes.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
         </Tabs>
       )}
