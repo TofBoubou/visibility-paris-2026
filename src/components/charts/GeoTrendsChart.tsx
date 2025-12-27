@@ -101,11 +101,11 @@ export function GeoTrendsChart({ data, maxCities = 10 }: GeoTrendsChartProps) {
           width={90}
         />
         <Tooltip
-          formatter={(value: number, name: string) => [`${value}`, name]}
+          formatter={(value) => [`${value}`, ""]}
           labelFormatter={(label) => `${label}`}
         />
         <Legend />
-        {data.map((candidate, index) => (
+        {data.map((candidate) => (
           <Bar
             key={candidate.candidateName}
             dataKey={candidate.candidateName}
@@ -159,7 +159,7 @@ export function GeoTrendsSingleCandidate({
           tick={{ fontSize: 11 }}
           width={75}
         />
-        <Tooltip formatter={(value: number) => [`${value}`, "Score"]} />
+        <Tooltip formatter={(value) => [`${value}`, "Score"]} />
         <Bar dataKey="score" radius={[0, 4, 4, 0]}>
           {topCities.map((entry, index) => (
             <Cell
