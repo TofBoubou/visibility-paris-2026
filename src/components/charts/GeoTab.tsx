@@ -243,9 +243,16 @@ export function GeoTab({ allCandidates, days, period }: GeoTabProps) {
       {/* Individual candidate charts */}
       {!isLoading && !geoData?.rateLimited && individualData.length > 0 && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">
-            Profil régional de chaque candidat. Les scores sont comparatifs : un candidat à 60 est moins recherché qu'un autre à 100 dans la même région.
-          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+            <p className="font-medium mb-1">Comment lire ces graphiques ?</p>
+            <p>
+              Les scores ci-dessous sont issus de la même comparaison Google Trends.
+              Ils indiquent l'intérêt relatif entre les candidats sélectionnés : si Marine Le Pen
+              affiche 60 en Île-de-France et Jordan Bardella 100, cela signifie que Bardella
+              est environ 40% plus recherché dans cette région. Un candidat dont le score
+              maximum est inférieur à 100 est globalement moins recherché que le leader.
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 gap-6">
           {individualData.map((candidate) => (
             <ExportableCard
