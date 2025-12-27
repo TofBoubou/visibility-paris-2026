@@ -245,12 +245,16 @@ export function GeoTab({ allCandidates, days, period }: GeoTabProps) {
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
             <p className="font-medium mb-1">Comment lire ces graphiques ?</p>
-            <p>
+            <p className="mb-2">
               Google Trends attribue un score de 100 à une seule combinaison région/candidat :
               celle avec le plus de recherches. Tous les autres scores sont relatifs à ce pic.
               Ainsi, si aucun candidat n'atteint 100 dans une région donnée, c'est que le pic
-              d'intérêt se situe ailleurs (autre région, autre candidat). Cela permet de comparer
-              l'intensité des recherches entre régions et entre candidats sur une même échelle.
+              d'intérêt se situe ailleurs (autre région, autre candidat).
+            </p>
+            <p>
+              <strong>Important :</strong> les scores dépendent des candidats sélectionnés.
+              Changer la sélection modifie l'échelle et peut changer les classements régionaux.
+              Par exemple, la "meilleure région" d'un candidat peut varier selon à qui on le compare.
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
