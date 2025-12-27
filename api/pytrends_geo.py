@@ -131,6 +131,122 @@ def fetch_geo_trends(keyword: str, geo: str, timeframe: str, resolution: str = "
     print(f"[PyTrendsGeo] ====== FETCH END - NO DATA ======")
     return {"data": [], "error": None}
 
+def fetch_geo_trends_comparative(keywords: list, geo: str, timeframe: str, resolution: str = "REGION") -> dict:
+    """
+    Fetch geographic interest data for multiple keywords in ONE request.
+    This gives COMPARABLE scores between keywords (max 5 keywords).
+
+    Returns:
+        {
+            "results": {
+                "region_name": {"keyword1": score, "keyword2": score, ...},
+                ...
+            },
+            "error": str or None,
+            "comparative": True
+        }
+    """
+    print(f"[PyTrendsGeo] ====== COMPARATIVE FETCH START ======")
+    print(f"[PyTrendsGeo] Keywords: {keywords}")
+    print(f"[PyTrendsGeo] Geo: {geo}, Timeframe: {timeframe}, Resolution: {resolution}")
+
+    if len(keywords) > 5:
+        print(f"[PyTrendsGeo] ERROR: Max 5 keywords for comparative mode")
+        return {"results": {}, "error": "Max 5 keywords for comparative mode", "comparative": True}
+
+    if not keywords:
+        print(f"[PyTrendsGeo] ERROR: No keywords provided")
+        return {"results": {}, "error": "No keywords provided", "comparative": True}
+
+    try:
+        from pytrends.request import TrendReq
+        import pandas as pd
+        print(f"[PyTrendsGeo] pytrends imported OK")
+    except ImportError as e:
+        print(f"[PyTrendsGeo] ERROR: pytrends import failed: {e}")
+        return {"results": {}, "error": "pytrends not installed", "comparative": True}
+
+    max_retries = 3
+
+    for attempt in range(max_retries):
+        print(f"[PyTrendsGeo] Attempt {attempt + 1}/{max_retries}")
+        try:
+            # Random delay to avoid rate limiting
+            delay = 2 + random.uniform(0, 2)
+            print(f"[PyTrendsGeo] Sleeping {delay:.1f}s before request")
+            time.sleep(delay)
+
+            print(f"[PyTrendsGeo] Creating TrendReq...")
+            pytrends = TrendReq(hl="fr-FR", tz=60, timeout=(10, 25))
+
+            print(f"[PyTrendsGeo] Building payload with ALL keywords: {keywords}")
+            pytrends.build_payload(keywords, timeframe=timeframe, geo=geo)
+
+            time.sleep(1 + random.uniform(0, 1))
+
+            # Patch resolution for non-US countries
+            if hasattr(pytrends, 'interest_by_region_widget') and pytrends.interest_by_region_widget:
+                print(f"[PyTrendsGeo] Widget found, patching resolution to {resolution}")
+                pytrends.interest_by_region_widget['request']['resolution'] = resolution
+
+            print(f"[PyTrendsGeo] Calling interest_by_region...")
+            df = pytrends.interest_by_region(resolution=resolution, inc_low_vol=True, inc_geo_code=False)
+
+            print(f"[PyTrendsGeo] DataFrame received: type={type(df)}")
+            if df is not None:
+                print(f"[PyTrendsGeo] DataFrame shape: {df.shape}")
+                print(f"[PyTrendsGeo] DataFrame columns: {list(df.columns)}")
+                print(f"[PyTrendsGeo] DataFrame index (first 10): {list(df.index[:10])}")
+                if not df.empty:
+                    print(f"[PyTrendsGeo] DataFrame head:\n{df.head(10)}")
+
+            if df is not None and not df.empty:
+                # Convert to dict: region -> {keyword: score, ...}
+                results = {}
+                for region_name in df.index:
+                    region_data = {}
+                    for kw in keywords:
+                        if kw in df.columns:
+                            score = int(df.loc[region_name, kw])
+                            region_data[kw] = score
+                    # Only include regions with at least some data
+                    if any(v > 0 for v in region_data.values()):
+                        results[region_name] = region_data
+
+                print(f"[PyTrendsGeo] SUCCESS: Found {len(results)} regions with data")
+                if results:
+                    first_region = list(results.keys())[0]
+                    print(f"[PyTrendsGeo] Example - {first_region}: {results[first_region]}")
+                print(f"[PyTrendsGeo] ====== COMPARATIVE FETCH END - SUCCESS ======")
+                return {"results": results, "error": None, "comparative": True}
+            else:
+                print(f"[PyTrendsGeo] DataFrame is None or empty")
+                if attempt < max_retries - 1:
+                    time.sleep(5 * (attempt + 1))
+
+        except Exception as e:
+            err_str = str(e)
+            print(f"[PyTrendsGeo] EXCEPTION: {err_str}")
+            import traceback
+            print(f"[PyTrendsGeo] Traceback:\n{traceback.format_exc()}")
+
+            if "429" in err_str:
+                if attempt < max_retries - 1:
+                    print(f"[PyTrendsGeo] Rate limited, waiting longer...")
+                    time.sleep(10 * (attempt + 1) + random.uniform(0, 5))
+                else:
+                    print(f"[PyTrendsGeo] ====== COMPARATIVE FETCH END - RATE LIMITED ======")
+                    return {"results": {}, "error": "RATE_LIMITED", "comparative": True}
+            else:
+                if attempt == max_retries - 1:
+                    print(f"[PyTrendsGeo] ====== COMPARATIVE FETCH END - ERROR ======")
+                    return {"results": {}, "error": err_str[:200], "comparative": True}
+                time.sleep(3)
+
+    print(f"[PyTrendsGeo] ====== COMPARATIVE FETCH END - NO DATA ======")
+    return {"results": {}, "error": None, "comparative": True}
+
+
 def fetch_geo_trends_batch(keywords: list, geo: str, timeframe: str, resolution: str = "CITY") -> dict:
     """
     Fetch geographic interest data for multiple keywords.
@@ -263,13 +379,21 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "No valid keywords"}).encode())
                 return
 
+            # Check for comparative mode
+            comparative = params.get("comparative", ["false"])[0].lower() == "true"
+            print(f"[PyTrendsGeo] Comparative mode: {comparative}")
+
             # Get timeframe
             timeframe = get_timeframe(days)
             print(f"[PyTrendsGeo] Timeframe: {timeframe}")
 
             # Fetch geographic trends
-            print(f"[PyTrendsGeo] Calling fetch_geo_trends_batch...")
-            result = fetch_geo_trends_batch(keywords, geo, timeframe, resolution)
+            if comparative and len(keywords) <= 5:
+                print(f"[PyTrendsGeo] Calling fetch_geo_trends_comparative...")
+                result = fetch_geo_trends_comparative(keywords, geo, timeframe, resolution)
+            else:
+                print(f"[PyTrendsGeo] Calling fetch_geo_trends_batch...")
+                result = fetch_geo_trends_batch(keywords, geo, timeframe, resolution)
             print(f"[PyTrendsGeo] Result: {json.dumps(result)[:500]}...")
 
             self.send_response(200)
@@ -299,6 +423,9 @@ class handler(BaseHTTPRequestHandler):
             geo = data.get("geo", "FR-J")
             days = data.get("days", 7)
             resolution = data.get("resolution", "CITY").upper()
+            comparative = data.get("comparative", False)
+
+            print(f"[PyTrendsGeo] POST - keywords: {keywords}, geo: {geo}, days: {days}, resolution: {resolution}, comparative: {comparative}")
 
             if resolution not in ["CITY", "REGION"]:
                 resolution = "CITY"
@@ -311,7 +438,13 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             timeframe = get_timeframe(days)
-            result = fetch_geo_trends_batch(keywords, geo, timeframe, resolution)
+
+            if comparative and len(keywords) <= 5:
+                print(f"[PyTrendsGeo] POST - Using comparative mode")
+                result = fetch_geo_trends_comparative(keywords, geo, timeframe, resolution)
+            else:
+                print(f"[PyTrendsGeo] POST - Using batch mode")
+                result = fetch_geo_trends_batch(keywords, geo, timeframe, resolution)
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
