@@ -326,7 +326,17 @@ export default function ParisPage() {
       const keywords = selectedParis
         .map((id) => PARIS_CANDIDATES[id]?.searchTerms[0])
         .filter(Boolean);
-      if (keywords.length === 0) return null;
+      console.log("[GeoTrends Frontend] ====== FETCH START ======");
+      console.log("[GeoTrends Frontend] Selected candidates:", selectedParis);
+      console.log("[GeoTrends Frontend] Keywords:", keywords);
+      console.log("[GeoTrends Frontend] Days:", days);
+
+      if (keywords.length === 0) {
+        console.log("[GeoTrends Frontend] No keywords, returning null");
+        return null;
+      }
+
+      console.log("[GeoTrends Frontend] Calling /api/trends/geo...");
       const res = await fetch("/api/trends/geo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -337,19 +347,40 @@ export default function ParisPage() {
           resolution: "CITY",
         }),
       });
+
+      console.log("[GeoTrends Frontend] Response status:", res.status);
       const data = await res.json();
+      console.log("[GeoTrends Frontend] Response data:", JSON.stringify(data).substring(0, 500));
+      console.log("[GeoTrends Frontend] Results keys:", Object.keys(data.results || {}));
+      console.log("[GeoTrends Frontend] Error:", data.error);
+      console.log("[GeoTrends Frontend] From cache:", data.fromCache);
+      console.log("[GeoTrends Frontend] Rate limited:", data.rateLimited);
+
+      // Log each keyword's results
+      for (const [kw, cities] of Object.entries(data.results || {})) {
+        const cityArray = cities as Array<{name: string; score: number}>;
+        console.log(`[GeoTrends Frontend] "${kw}": ${cityArray.length} cities`);
+      }
+
       // Map results to candidates
-      return selectedParis.map((id) => {
+      const mapped = selectedParis.map((id) => {
         const candidate = PARIS_CANDIDATES[id];
         const searchTerm = candidate?.searchTerms[0];
+        const cities = data.results?.[searchTerm] || [];
+        console.log(`[GeoTrends Frontend] Mapping ${candidate?.name} (${searchTerm}): ${cities.length} cities`);
         return {
           candidateId: id,
           candidateName: candidate?.name || id,
           color: candidate?.color || "#666",
           highlighted: candidate?.highlighted,
-          cities: data.results?.[searchTerm] || [],
+          cities,
         };
       });
+
+      console.log("[GeoTrends Frontend] ====== FETCH END ======");
+      console.log("[GeoTrends Frontend] Mapped data:", mapped.map(m => ({ name: m.candidateName, cities: m.cities.length })));
+
+      return mapped;
     },
     staleTime: 30 * 60 * 1000, // 30 min
   });

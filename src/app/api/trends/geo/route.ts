@@ -31,24 +31,29 @@ async function fetchFromPython(
     const keywordsParam = encodeURIComponent(keywords.join(","));
     const url = `${baseUrl}/api/pytrends_geo?keywords=${keywordsParam}&geo=${geo}&days=${days}&resolution=${resolution}`;
 
-    console.log(`[TrendsGeo] Fetching URL: ${url}`);
-    console.log(`[TrendsGeo] Keywords: ${keywords.join(", ")}, geo: ${geo}`);
+    console.log(`[TrendsGeo] ====== FETCH START ======`);
+    console.log(`[TrendsGeo] URL: ${url}`);
+    console.log(`[TrendsGeo] Keywords: ${JSON.stringify(keywords)}`);
+    console.log(`[TrendsGeo] Geo: ${geo}, Days: ${days}, Resolution: ${resolution}`);
 
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
-    console.log(`[TrendsGeo] Python response status: ${response.status}`);
+    console.log(`[TrendsGeo] Response status: ${response.status}`);
+    console.log(`[TrendsGeo] Response headers:`, Object.fromEntries(response.headers.entries()));
+
+    const responseText = await response.text();
+    console.log(`[TrendsGeo] Raw response (first 1000 chars): ${responseText.substring(0, 1000)}`);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[TrendsGeo] Python error response: ${errorText}`);
+      console.error(`[TrendsGeo] ERROR - Response not OK`);
       let error: { error?: string } = {};
       try {
-        error = JSON.parse(errorText);
+        error = JSON.parse(responseText);
       } catch {
-        error = { error: errorText };
+        error = { error: responseText };
       }
       if (response.status === 429 || error.error === "RATE_LIMITED") {
         return { results: {}, error: "RATE_LIMITED", rateLimited: true };
@@ -56,20 +61,46 @@ async function fetchFromPython(
       return { results: {}, error: error.error || `HTTP ${response.status}`, rateLimited: false };
     }
 
-    const data = await response.json();
-    console.log(`[TrendsGeo] Python response keys:`, Object.keys(data.results || {}));
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error(`[TrendsGeo] ERROR - Failed to parse JSON:`, e);
+      return { results: {}, error: "Invalid JSON response", rateLimited: false };
+    }
+
+    console.log(`[TrendsGeo] Parsed data keys:`, Object.keys(data));
+    console.log(`[TrendsGeo] Results keys:`, Object.keys(data.results || {}));
+
+    // Log each keyword's results
+    for (const [kw, cities] of Object.entries(data.results || {})) {
+      const cityArray = cities as GeoData[];
+      console.log(`[TrendsGeo] Keyword "${kw}": ${cityArray.length} cities`);
+      if (cityArray.length > 0) {
+        console.log(`[TrendsGeo]   Top 3: ${JSON.stringify(cityArray.slice(0, 3))}`);
+      }
+    }
+
+    if (data.error) {
+      console.log(`[TrendsGeo] Data contains error: ${data.error}`);
+    }
+    if (data.from_cache) {
+      console.log(`[TrendsGeo] Data is from Python cache`);
+    }
 
     if (data.error === "RATE_LIMITED") {
       return { results: data.results || {}, error: "RATE_LIMITED", rateLimited: true };
     }
 
+    console.log(`[TrendsGeo] ====== FETCH END - SUCCESS ======`);
     return {
       results: data.results || {},
       error: data.error,
       rateLimited: false,
     };
   } catch (error) {
-    console.error(`[TrendsGeo] Python fetch error:`, error);
+    console.error(`[TrendsGeo] ====== FETCH END - EXCEPTION ======`);
+    console.error(`[TrendsGeo] Exception:`, error);
     return { results: {}, error: String(error), rateLimited: false };
   }
 }
