@@ -3,6 +3,7 @@ import { kv } from "@vercel/kv";
 // Cache durations in seconds
 export const CACHE_DURATION = {
   TRENDS: 12 * 60 * 60, // 12 hours
+  TRENDS_GEO: 6 * 60 * 60, // 6 hours (geographic trends)
   SENTIMENT: 24 * 60 * 60, // 24 hours
   THEMES: 24 * 60 * 60, // 24 hours
   YOUTUBE_7D: 12 * 60 * 60, // 12 hours (2 refreshs/day)
@@ -82,7 +83,7 @@ const CACHE_VERSION = "v8";
 
 // Build cache keys
 export function buildCacheKey(
-  type: "sentiment" | "themes" | "trends" | "youtube",
+  type: "sentiment" | "themes" | "trends" | "trends_geo" | "youtube",
   identifier: string,
   period?: number
 ): string {

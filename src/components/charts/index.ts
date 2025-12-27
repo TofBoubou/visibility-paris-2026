@@ -6,3 +6,4 @@ export { HistoryChart } from "./HistoryChart";
 export { YouTubeChart } from "./YouTubeChart";
 export { YouTubeScatterChart } from "./YouTubeScatterChart";
 export { WikipediaChart } from "./WikipediaChart";
+export { GeoTrendsChart, GeoTrendsSingleCandidate, GeoTrendsComparison } from "./GeoTrendsChart";
