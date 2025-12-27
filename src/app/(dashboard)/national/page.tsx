@@ -18,6 +18,9 @@ import {
   WikipediaChart,
   SentimentChart,
   SentimentDetailTable,
+  GeoTrendsChart,
+  GeoTrendsSingleCandidate,
+  GeoTrendsComparison,
 } from "@/components/charts";
 import { ThemesList, ThemesOverview } from "@/components/ai/ThemesList";
 import { TvRadioSection } from "@/components/charts/TvRadioSection";
@@ -34,6 +37,7 @@ import {
   ChevronDown,
   ExternalLink,
   Download,
+  MapPin,
 } from "lucide-react";
 
 interface CandidateData {
@@ -309,6 +313,55 @@ export default function NationalPage() {
     enabled: !!candidatesData && candidatesData.length > 0,
   });
 
+  // Fetch geographic trends data (by region for France)
+  const { data: geoTrendsData, isLoading: geoTrendsLoading } = useQuery({
+    queryKey: ["national-geo-trends", selectedNational, period],
+    queryFn: async () => {
+      const keywords = selectedNational
+        .map((id) => NATIONAL_CANDIDATES[id]?.searchTerms[0])
+        .filter(Boolean);
+      if (keywords.length === 0) return null;
+
+      console.log("[GeoTrendsNational] ====== FETCH START ======");
+      console.log("[GeoTrendsNational] Keywords:", keywords);
+      console.log("[GeoTrendsNational] Days:", days);
+      console.log("[GeoTrendsNational] Geo: FR, Resolution: REGION");
+
+      const res = await fetch("/api/trends/geo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keywords,
+          geo: "FR",
+          days,
+          resolution: "REGION",
+        }),
+      });
+
+      const data = await res.json();
+      console.log("[GeoTrendsNational] Response status:", res.status);
+      console.log("[GeoTrendsNational] Response data keys:", Object.keys(data));
+      console.log("[GeoTrendsNational] Results keys:", Object.keys(data.results || {}));
+      console.log("[GeoTrendsNational] fromCache:", data.fromCache);
+      console.log("[GeoTrendsNational] rateLimited:", data.rateLimited);
+      console.log("[GeoTrendsNational] error:", data.error);
+
+      // Log each keyword's results
+      for (const [kw, regions] of Object.entries(data.results || {})) {
+        const regionArray = regions as Array<{ name: string; score: number }>;
+        console.log(`[GeoTrendsNational] Keyword "${kw}": ${regionArray.length} regions`);
+        if (regionArray.length > 0) {
+          console.log(`[GeoTrendsNational]   Top 3:`, regionArray.slice(0, 3));
+        }
+      }
+
+      console.log("[GeoTrendsNational] ====== FETCH END ======");
+      return data;
+    },
+    staleTime: 30 * 60 * 1000, // 30 min
+    enabled: selectedNational.length > 0,
+  });
+
   // Merge scores with candidate data
   const enrichedData = candidatesData?.map((c) => {
     const score = scoresData?.scores?.find((s: { id: string }) => s.id === c.id);
@@ -490,6 +543,10 @@ export default function NationalPage() {
             <TabsTrigger value="historique">
               <History className="w-4 h-4 mr-1.5" />
               Historique
+            </TabsTrigger>
+            <TabsTrigger value="geo">
+              <MapPin className="w-4 h-4 mr-1.5" />
+              Géo
             </TabsTrigger>
           </TabsList>
 
@@ -932,6 +989,95 @@ export default function NationalPage() {
                 ))}
               </div>
             </ExportableCard>
+          </TabsContent>
+
+          <TabsContent value="geo">
+            {geoTrendsLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                <span className="ml-2 text-gray-600">Chargement des données géographiques...</span>
+              </div>
+            ) : geoTrendsData?.results && Object.keys(geoTrendsData.results).length > 0 ? (
+              <div className="space-y-6">
+                {/* Debug info */}
+                {geoTrendsData.error && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                    Avertissement: {geoTrendsData.error}
+                  </div>
+                )}
+                {geoTrendsData.rateLimited && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800">
+                    Données partielles: limite de requêtes Google Trends atteinte
+                  </div>
+                )}
+
+                {/* Comparison overview */}
+                <ExportableCard title="Top régions par candidat" filename={`national-geo-comparison-${period}`}>
+                  <GeoTrendsComparison
+                    data={sortedData.map((c) => {
+                      const searchTerm = NATIONAL_CANDIDATES[c.id]?.searchTerms[0];
+                      const regions = geoTrendsData.results[searchTerm] || [];
+                      console.log(`[GeoTrendsNational UI] ${c.name} (${searchTerm}): ${regions.length} regions`);
+                      return {
+                        candidateName: c.name,
+                        color: c.color,
+                        highlighted: c.highlighted,
+                        cities: regions,
+                      };
+                    })}
+                  />
+                </ExportableCard>
+
+                {/* Combined chart */}
+                <ExportableCard title="Intérêt par région" filename={`national-geo-regions-${period}`}>
+                  <GeoTrendsChart
+                    data={sortedData.map((c) => {
+                      const searchTerm = NATIONAL_CANDIDATES[c.id]?.searchTerms[0];
+                      return {
+                        candidateName: c.name,
+                        color: c.color,
+                        highlighted: c.highlighted,
+                        cities: geoTrendsData.results[searchTerm] || [],
+                      };
+                    })}
+                    maxCities={15}
+                  />
+                </ExportableCard>
+
+                {/* Individual candidate charts */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  {sortedData.map((c) => {
+                    const searchTerm = NATIONAL_CANDIDATES[c.id]?.searchTerms[0];
+                    const regions = geoTrendsData.results[searchTerm] || [];
+                    return (
+                      <ExportableCard
+                        key={c.id}
+                        title={c.name}
+                        filename={`national-geo-${c.id}-${period}`}
+                      >
+                        <GeoTrendsSingleCandidate
+                          candidateName={c.name}
+                          color={c.color}
+                          highlighted={c.highlighted}
+                          cities={regions}
+                          maxCities={10}
+                        />
+                      </ExportableCard>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center text-gray-500">
+                  <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>Pas de données géographiques disponibles</p>
+                  {geoTrendsData?.error && (
+                    <p className="text-sm mt-2 text-red-500">{geoTrendsData.error}</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       )}
