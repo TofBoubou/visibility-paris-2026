@@ -106,7 +106,9 @@ async function fetchFromPython(
 }
 
 export async function POST(request: NextRequest) {
-  console.log(`[TrendsGeo] POST request received`);
+  console.log(`[TrendsGeo] ====== POST REQUEST RECEIVED ======`);
+  console.log(`[TrendsGeo] URL: ${request.url}`);
+  console.log(`[TrendsGeo] Method: ${request.method}`);
   try {
     const body = await request.json();
     console.log(`[TrendsGeo] Request body:`, JSON.stringify(body));
@@ -134,6 +136,12 @@ export async function POST(request: NextRequest) {
     const cachedData = await cacheGet<GeoTrendsResult>(cacheKey);
     if (cachedData) {
       console.log(`[TrendsGeo] Cache HIT for batch (${keywords.length} keywords)`);
+      console.log(`[TrendsGeo] Cached data results keys:`, Object.keys(cachedData.results || {}));
+      for (const [kw, cities] of Object.entries(cachedData.results || {})) {
+        const cityArray = cities as GeoData[];
+        console.log(`[TrendsGeo] Cached "${kw}": ${cityArray.length} cities`);
+      }
+      console.log(`[TrendsGeo] Returning cached response`);
       return NextResponse.json({
         ...cachedData,
         fromCache: true,
